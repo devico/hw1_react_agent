@@ -4,10 +4,10 @@
     "complexity": "simple",
     "query": "Перевір поточний стан сервісу api.",
     "expected": "Сервіс api має статус healthy.",
-    "actual": "Сервіс api відображає статус healthy і задіяною затримкою є 120 мілісекунд.",
+    "actual": "Сервіс api: статус healthy. Затримка 120 мс.",
     "status": "success",
     "steps": 4,
-    "llm_calls": 3,
+    "llm_calls": 2,
     "tool_calls": [
       "get_service_status"
     ],
@@ -17,19 +17,26 @@
         "args": {
           "service": "api"
         },
-        "id": "7b9ffd03-579f-43d1-a21e-f46dc0145239"
+        "id": "d10022da-485d-4fa7-a3a8-cff63e7e9b8f"
       }
     ],
     "sources": [
       "get_service_status"
     ],
     "confidence": 1.0,
-    "elapsed_ms": 5938.0,
+    "elapsed_ms": 1531.0,
     "max_steps_reached": false,
     "timeout_reached": false,
     "loop_detected": false,
     "safety_stop": null,
     "evaluation_errors": [],
+    "evaluation_warnings": [],
+    "tool_metrics": {
+      "total_tool_calls": 1,
+      "unexpected_tools": [],
+      "repeated_tool_calls": 0,
+      "tool_error_count": 0
+    },
     "trajectory_file": "trajectories\\TC-001.json"
   },
   {
@@ -37,10 +44,10 @@
     "complexity": "simple",
     "query": "Покажи два останні розгортання сервісу payments та результат кожного.",
     "expected": "Два розгортання payments: 2.0.9 failed, 2.0.8 success.",
-    "actual": "Ось історія останніх двох розгортань для сервісу payments:\n\n1. Версія 2.0.9: Розгортання не успішне.\n2. Версія 2.0.8: Розгортання успішне.\n\nДля подальшого аналізу, можемо перевірити результати тестування цих версій.",
+    "actual": "Історія розгортань payments: версія 2.0.9 — failed; версія 2.0.8 — success.",
     "status": "success",
     "steps": 4,
-    "llm_calls": 3,
+    "llm_calls": 2,
     "tool_calls": [
       "get_deployment_history"
     ],
@@ -51,19 +58,26 @@
           "service": "payments",
           "limit": 2
         },
-        "id": "8996b58f-5e60-40c6-9bf4-d4267a554f3c"
+        "id": "a82d197a-f387-4a1e-99b1-7f9b349de964"
       }
     ],
     "sources": [
       "get_deployment_history"
     ],
     "confidence": 1.0,
-    "elapsed_ms": 4875.0,
+    "elapsed_ms": 2172.0,
     "max_steps_reached": false,
     "timeout_reached": false,
     "loop_detected": false,
     "safety_stop": null,
     "evaluation_errors": [],
+    "evaluation_warnings": [],
+    "tool_metrics": {
+      "total_tool_calls": 1,
+      "unexpected_tools": [],
+      "repeated_tool_calls": 0,
+      "tool_error_count": 0
+    },
     "trajectory_file": "trajectories\\TC-002.json"
   },
   {
@@ -71,14 +85,13 @@
     "complexity": "medium",
     "query": "Перевір стан сервісу worker та результати тестування версії 1.2.0. Повідом статус, кількість провалених тестів і покриття.",
     "expected": "worker healthy, failed=0, coverage=92%.",
-    "actual": "Реліз версії 1.2.0 для сервісу `worker` підтверджений. Статус сервісу `healthy`, всі тести пройшли успішно (0 провалених), покриття тестами становить 92.0%, що відповідає нашим політикам якості.\n\nТаким чином, реліз може бути розповсюджений.",
+    "actual": "Сервіс worker: статус healthy. Затримка 90 мс. Результати тестування worker версії 1.2.0: пройдено тестів 75, провалених тестів 0, покриття тестами 92.0%.",
     "status": "success",
-    "steps": 6,
-    "llm_calls": 4,
+    "steps": 4,
+    "llm_calls": 2,
     "tool_calls": [
       "get_service_status",
-      "get_test_results",
-      "check_release_policy"
+      "get_test_results"
     ],
     "tool_call_details": [
       {
@@ -86,57 +99,49 @@
         "args": {
           "service": "worker"
         },
-        "id": "17c81aa7-2d54-45fe-88cf-01bf1c97aef8"
+        "id": "e7d4cf5a-eea4-4e4a-8ff5-732be26f9a02"
       },
       {
         "name": "get_test_results",
         "args": {
-          "service": "worker",
-          "version": "1.2.0"
+          "version": "1.2.0",
+          "service": "worker"
         },
-        "id": "136b2afa-bae8-4c5d-9e2d-89612299b692"
-      },
-      {
-        "name": "check_release_policy",
-        "args": {
-          "service": "worker",
-          "status": "healthy",
-          "failed_tests": 0,
-          "coverage_pct": 92
-        },
-        "id": "fec200f7-767c-44f7-a1b9-8e6406757ebe"
+        "id": "e2c4b400-3dd4-4aac-8250-648f758ba00a"
       }
     ],
     "sources": [
       "get_service_status",
-      "get_test_results",
-      "check_release_policy"
+      "get_test_results"
     ],
     "confidence": 1.0,
-    "elapsed_ms": 8062.0,
+    "elapsed_ms": 2406.0,
     "max_steps_reached": false,
     "timeout_reached": false,
     "loop_detected": false,
     "safety_stop": null,
     "evaluation_errors": [],
+    "evaluation_warnings": [],
+    "tool_metrics": {
+      "total_tool_calls": 2,
+      "unexpected_tools": [],
+      "repeated_tool_calls": 0,
+      "tool_error_count": 0
+    },
     "trajectory_file": "trajectories\\TC-003.json"
   },
   {
     "test_id": "TC-004",
     "complexity": "complex",
     "query": "Чи можна випускати реліз api версії 1.4.0? Перевір стан сервісу, результати тестів та політику релізу.",
-    "expected": "Реліз дозволено: healthy, 0 failed, coverage=94%, approved=true.",
+    "expected": "Реліз дозволено: healthy, 0 failed, coverage=94%.",
     "actual": "Реліз api версії 1.4.0 дозволено згідно з демонстраційною політикою. Сервіс api: статус healthy, провалених тестів 0, покриття тестами 94.0%. Усі критерії виконані.",
     "status": "success",
-    "steps": 8,
-    "llm_calls": 4,
+    "steps": 6,
+    "llm_calls": 3,
     "tool_calls": [
       "get_service_status",
       "get_test_results",
-      "check_release_policy",
-      "get_service_status",
-      "get_test_results",
-      "check_release_policy",
       "check_release_policy"
     ],
     "tool_call_details": [
@@ -145,7 +150,7 @@
         "args": {
           "service": "api"
         },
-        "id": "3b49f0dc-c595-4f6b-bd9d-79814325f019"
+        "id": "19112c6f-569b-4ca9-8e7d-b05f07ce06db"
       },
       {
         "name": "get_test_results",
@@ -153,52 +158,17 @@
           "service": "api",
           "version": "1.4.0"
         },
-        "id": "e66252d0-6d35-4c1d-8806-3764ffdb5ec8"
+        "id": "280bae9b-39af-46cf-bd37-a57528ef5ca4"
       },
       {
         "name": "check_release_policy",
         "args": {
+          "service": "api",
+          "status": "healthy",
           "failed_tests": 0,
-          "coverage_pct": 0,
-          "service": "api",
-          "status": ""
+          "coverage_pct": 94
         },
-        "id": "90892cb7-5956-480c-b2a7-2d3f80ff92f8"
-      },
-      {
-        "name": "get_service_status",
-        "args": {
-          "service": "api"
-        },
-        "id": "d82ccd54-8479-4481-af4c-f65369b4423a"
-      },
-      {
-        "name": "get_test_results",
-        "args": {
-          "service": "api",
-          "version": "1.4.0"
-        },
-        "id": "89a224ab-7150-47d4-a6c4-885a227b0457"
-      },
-      {
-        "name": "check_release_policy",
-        "args": {
-          "failed_tests": 0,
-          "service": "api",
-          "status": "",
-          "coverage_pct": 0
-        },
-        "id": "d2ad4072-40dc-4ffa-a53b-849d5acc30c8"
-      },
-      {
-        "name": "check_release_policy",
-        "args": {
-          "coverage_pct": 94,
-          "failed_tests": 0,
-          "service": "api",
-          "status": "healthy"
-        },
-        "id": "d1e37089-f332-483f-9227-ccc3b9ebd9e6"
+        "id": "96594f22-cd2c-4e0b-8d64-7a2d4b0b3192"
       }
     ],
     "sources": [
@@ -207,19 +177,26 @@
       "check_release_policy"
     ],
     "confidence": 1.0,
-    "elapsed_ms": 6344.0,
+    "elapsed_ms": 4141.0,
     "max_steps_reached": false,
     "timeout_reached": false,
     "loop_detected": false,
     "safety_stop": null,
     "evaluation_errors": [],
+    "evaluation_warnings": [],
+    "tool_metrics": {
+      "total_tool_calls": 3,
+      "unexpected_tools": [],
+      "repeated_tool_calls": 0,
+      "tool_error_count": 0
+    },
     "trajectory_file": "trajectories\\TC-004.json"
   },
   {
     "test_id": "TC-005",
     "complexity": "complex",
     "query": "Чи можна випускати реліз payments версії 2.1.0? Перевір стан сервісу, результати тестів та політику релізу.",
-    "expected": "Реліз заборонено: degraded, 4 failed, coverage=87%, approved=false.",
+    "expected": "Реліз заборонено: degraded, 4 failed, coverage=87%.",
     "actual": "Реліз payments версії 2.1.0 заборонено. Сервіс payments: статус degraded, провалених тестів 4, покриття тестами 87.0%. Причини: Сервіс не має статусу healthy; Є провалені тести; Покриття тестами менше 90%.",
     "status": "success",
     "steps": 6,
@@ -227,9 +204,6 @@
     "tool_calls": [
       "get_service_status",
       "get_test_results",
-      "check_release_policy",
-      "get_service_status",
-      "get_test_results",
       "check_release_policy"
     ],
     "tool_call_details": [
@@ -238,7 +212,7 @@
         "args": {
           "service": "payments"
         },
-        "id": "db3cff22-e496-485f-b1fc-408d9b510fa6"
+        "id": "b8577e72-d8c8-4593-a007-3afe06191a03"
       },
       {
         "name": "get_test_results",
@@ -246,42 +220,17 @@
           "service": "payments",
           "version": "2.1.0"
         },
-        "id": "676c90fe-72f5-440e-870a-51ef7bfb7ed7"
+        "id": "5093a73d-08d9-4d28-8003-57fb5d40f311"
       },
       {
         "name": "check_release_policy",
         "args": {
-          "service": "payments",
-          "status": "",
-          "failed_tests": 0,
-          "coverage_pct": 0
-        },
-        "id": "dea63340-a30d-46bf-ad7f-f1f4b613bf63"
-      },
-      {
-        "name": "get_service_status",
-        "args": {
+          "status": "degraded",
+          "failed_tests": 4,
+          "coverage_pct": 87,
           "service": "payments"
         },
-        "id": "bfb9d12a-bf0c-48e1-b34f-d0ce0ce4bd9f"
-      },
-      {
-        "name": "get_test_results",
-        "args": {
-          "service": "payments",
-          "version": "2.1.0"
-        },
-        "id": "cde825ef-62c9-4d74-b81c-b6ebb3d79eb8"
-      },
-      {
-        "name": "check_release_policy",
-        "args": {
-          "failed_tests": 4,
-          "service": "payments",
-          "status": "degraded",
-          "coverage_pct": 87
-        },
-        "id": "2e685219-9c64-4812-a486-5696b9541fc7"
+        "id": "794cef1f-4857-48e3-ada2-69b7fabf2a36"
       }
     ],
     "sources": [
@@ -290,12 +239,19 @@
       "check_release_policy"
     ],
     "confidence": 1.0,
-    "elapsed_ms": 6516.0,
+    "elapsed_ms": 4562.0,
     "max_steps_reached": false,
     "timeout_reached": false,
     "loop_detected": false,
     "safety_stop": null,
     "evaluation_errors": [],
+    "evaluation_warnings": [],
+    "tool_metrics": {
+      "total_tool_calls": 3,
+      "unexpected_tools": [],
+      "repeated_tool_calls": 0,
+      "tool_error_count": 0
+    },
     "trajectory_file": "trajectories\\TC-005.json"
   }
 ]

@@ -1,7 +1,7 @@
 {
   "query": "Перевір стан сервісу api",
   "total_steps": 5,
-  "total_time_ms": 813.0,
+  "total_time_ms": 797.0,
   "trajectory": [
     {
       "step_number": 1,
@@ -17,7 +17,7 @@
           "id": "first-status"
         }
       ],
-      "timestamp": "2026-11-22T17:00:23.517894+00:00",
+      "timestamp": "2026-11-22T18:44:24.502999+00:00",
       "duration_ms": 0.0,
       "elapsed_ms": 0.0
     },
@@ -35,9 +35,9 @@
           "id": "first-status"
         }
       ],
-      "timestamp": "2026-11-22T17:00:23.517894+00:00",
+      "timestamp": "2026-11-22T18:44:24.504287+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 0.0
+      "elapsed_ms": 15.0
     },
     {
       "step_number": 3,
@@ -45,9 +45,9 @@
       "input": "{\"step_count\": 1, \"messages_count\": 3, \"last_message\": {\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 120}\", \"name\": \"get_service_status\", \"status\": \"success\", \"tool_call_id\": \"first-status\"}, \"safety_stop\": null}",
       "output": "{\"error_type\": \"CancelledError\", \"message\": \"\", \"cancelled\": true}",
       "tool_calls": [],
-      "timestamp": "2026-11-22T17:00:24.322483+00:00",
-      "duration_ms": 813.0,
-      "elapsed_ms": 813.0
+      "timestamp": "2026-11-22T18:44:25.290616+00:00",
+      "duration_ms": 782.0,
+      "elapsed_ms": 797.0
     },
     {
       "step_number": 4,
@@ -55,19 +55,19 @@
       "input": "{\"timeout_seconds\": 0.8}",
       "output": "{\"reason\": \"timeout\"}",
       "tool_calls": [],
-      "timestamp": "2026-11-22T17:00:24.322483+00:00",
+      "timestamp": "2026-11-22T18:44:25.290616+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 813.0
+      "elapsed_ms": 797.0
     },
     {
       "step_number": 5,
       "node_name": "formatter",
       "input": "{\"step_count\": 1, \"messages_count\": 3, \"last_message\": {\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 120}\", \"name\": \"get_service_status\", \"status\": \"success\", \"tool_call_id\": \"first-status\"}, \"safety_stop\": \"timeout\"}",
-      "output": "{\"final_answer\": {\"answer\": \"Виконання зупинено: Перевищено загальний timeout (0.8 с) Отримані дані: [{\\\"tool\\\": \\\"get_service_status\\\", \\\"result\\\": {\\\"service\\\": \\\"api\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 120}}]. Остаточний висновок не сформовано через обмеження виконання.\", \"confidence\": 0.0, \"sources\": [\"get_service_status\"]}}",
+      "output": "{\"final_answer\": {\"answer\": \"Виконання зупинено: Перевищено загальний timeout (0.8 с) Отримані дані: [{\\\"tool\\\": \\\"get_service_status\\\", \\\"result\\\": {\\\"service\\\": \\\"api\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 120}}]. Остаточний висновок не сформовано.\", \"confidence\": 0.0, \"sources\": [\"get_service_status\"]}}",
       "tool_calls": [],
-      "timestamp": "2026-11-22T17:00:24.322483+00:00",
+      "timestamp": "2026-11-22T18:44:25.290616+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 813.0
+      "elapsed_ms": 797.0
     }
   ]
 }

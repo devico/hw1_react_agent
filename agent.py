@@ -1,11 +1,12 @@
 
-"""ReAct-агент для перевірки готовності програмних релізів."""
+"""ReAct-агент для перевірки сервісів і демонстраційних релізів."""
 
 import asyncio
 import json
 import time
 from typing import Annotated, Literal, NotRequired, TypedDict
 
+from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import (
     AIMessage,
     AnyMessage,
@@ -14,9 +15,10 @@ from langchain_core.messages import (
     ToolMessage,
 )
 from langchain_ollama import ChatOllama
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
+from pydantic import ValidationError
 
 from logger import TrajectoryLogger
 from safety import SafetyConfig, SafetyController, SafetyStop
@@ -29,34 +31,32 @@ from tools import TOOLS
 # ============================================================
 
 SYSTEM_PROMPT = """
-Ти DevOps-асистент для перевірки сервісів і релізів.
+Ти DevOps-асистент для демонстраційних сервісів api, payments, worker.
 
-Доступні сервіси: api, payments, worker.
+Використовуй лише інструменти, потрібні для запиту користувача.
+Стан перевіряй через get_service_status, тести — через get_test_results,
+історію розгортань — через get_deployment_history.
 
-Правила:
-1. Стан сервісу перевіряй через get_service_status.
-2. Результати тестів отримуй через get_test_results.
-3. Історію розгортань отримуй через get_deployment_history.
-4. Для рішення про реліз спочатку отримай стан сервісу
-   та результати тестів потрібної версії.
-5. Лише після отримання фактичних результатів викликай
-   check_release_policy.
-6. Не вигадуй і не округлюй метрики.
-7. Якщо інструмент повернув помилку, виправ причину.
-8. Не дозволяй реліз без підтвердження політики.
-9. Усі дані демонстраційні, не production.
+Для рішення про реліз спочатку отримай стан і результати тестів,
+а потім викликай check_release_policy з їхніми фактичними значеннями.
+
+Не вигадуй метрики, версії та аргументи. Не роби незапитаних
+висновків про дозвіл релізу. Дані демонстраційні, не production.
+
+Аргументи інструментів передавай як значення, а не як JSON Schema:
+правильно: {"service": "api"};
+неправильно: {"service": {"description": "api", "type": "string"}}.
+
+Після помилки валідації самостійно виправ аргументи і повтори
+інструмент; не проси користувача повторно ввести вже наявні дані.
 
 Відповідай українською мовою.
 """
 
 FORMATTER_PROMPT = """
-Сформуй структуровану відповідь DevOps-агента.
-
-Використовуй лише надані факти та результати інструментів.
-Не вигадуй метрики або джерела.
-Дані демонстраційні, а не production.
-
-Поверни answer, confidence та sources.
+Сформуй структуровану відповідь українською мовою з фактичних даних.
+Не вигадуй метрики чи джерела, не роби незапитаних рішень про реліз.
+Поверни answer, confidence (число від 0 до 1) і sources.
 """
 
 
@@ -65,8 +65,6 @@ FORMATTER_PROMPT = """
 # ============================================================
 
 class AgentState(TypedDict):
-    """Стан виконання ReAct-графа."""
-
     messages: Annotated[list[AnyMessage], add_messages]
     step_count: int
 
@@ -76,7 +74,7 @@ class AgentState(TypedDict):
 
 
 # ============================================================
-# 3. LLM
+# 3. LLM AND TOOLS
 # ============================================================
 
 llm = ChatOllama(
@@ -85,6 +83,7 @@ llm = ChatOllama(
 )
 
 llm_with_tools = llm.bind_tools(TOOLS)
+_default_llm_with_tools = llm_with_tools
 
 structured_llm = llm.with_structured_output(
     FinalAnswer,
@@ -95,15 +94,214 @@ tool_executor = ToolNode(TOOLS)
 
 
 # ============================================================
-# 4. AGENT NODE
+# 4. QUERY CLASSIFICATION
+# ============================================================
+
+def user_query_from_state(state: AgentState) -> str:
+    return next(
+        (
+            str(msg.content)
+            for msg in state.get("messages", [])
+            if isinstance(msg, HumanMessage)
+        ),
+        "",
+    )
+
+
+def is_release_decision_query(query: str) -> bool:
+    text = query.casefold()
+
+    release_words = (
+        "реліз",
+        "релиз",
+        "release",
+    )
+
+    decision_words = (
+        "можна",
+        "можно",
+        "випуск",
+        "выпуск",
+        "дозвол",
+        "разреш",
+        "готов",
+        "approve",
+        "deploy",
+    )
+
+    return (
+        any(word in text for word in release_words)
+        and any(word in text for word in decision_words)
+    )
+
+
+def select_tools_for_query(query: str) -> list:
+    """Визначити допустимі інструменти для поточного запиту."""
+
+    text = query.casefold()
+    selected = set()
+
+    release_decision = is_release_decision_query(query)
+
+    if release_decision:
+        selected.update({
+            "get_service_status",
+            "get_test_results",
+            "check_release_policy",
+        })
+
+    if any(
+        word in text
+        for word in (
+            "стан",
+            "статус",
+            "здоров",
+            "status",
+            "health",
+        )
+    ):
+        selected.add("get_service_status")
+
+    if any(
+        word in text
+        for word in (
+            "тест",
+            "покрит",
+            "coverage",
+            "failed",
+        )
+    ):
+        selected.add("get_test_results")
+
+    if any(
+        word in text
+        for word in (
+            "розгорт",
+            "деплой",
+            "депло",
+            "deployment",
+            "deploy",
+            "історі",
+        )
+    ):
+        selected.add("get_deployment_history")
+
+    if not selected:
+        selected.update({
+            "get_service_status",
+            "get_test_results",
+            "get_deployment_history",
+        })
+
+    if not release_decision:
+        selected.discard("check_release_policy")
+
+    return [
+        tool
+        for tool in TOOLS
+        if tool.name in selected
+    ]
+
+
+# ============================================================
+# 5. ERROR RECOVERY
+# ============================================================
+
+def unresolved_failed_tools(
+    state: AgentState,
+) -> set[str]:
+    """Знайти запитані інструменти без успішного результату.
+
+    Некоректний виклик залишається помилкою, доки LLM
+    не виконає новий виклик із правильними аргументами.
+    """
+
+    required = {
+        tool.name
+        for tool in select_tools_for_query(
+            user_query_from_state(state)
+        )
+    }
+
+    failed = set()
+    successful = set()
+
+    for message in state.get("messages", []):
+        if not isinstance(message, ToolMessage):
+            continue
+
+        if message.name not in required:
+            continue
+
+        if message.status == "error":
+            failed.add(message.name)
+            continue
+
+        try:
+            data = json.loads(message.content)
+        except (ValueError, TypeError):
+            continue
+
+        if (
+            isinstance(data, dict)
+            and "error" not in data
+        ):
+            successful.add(message.name)
+
+    return failed - successful
+
+
+def should_retry_failed_tools(
+    state: AgentState,
+) -> bool:
+    """Дати LLM обмежену можливість виправити виклик.
+
+    Якщо модель відповідає текстом замість повторного
+    tool call, повертаємо її до вузла agent.
+
+    max_steps і timeout залишаються головними лімітами.
+    """
+
+    failed_names = unresolved_failed_tools(state)
+
+    if not failed_names:
+        return False
+
+    messages = state.get("messages", [])
+
+    last_error = max(
+        (
+            index
+            for index, msg in enumerate(messages)
+            if (
+                isinstance(msg, ToolMessage)
+                and msg.status == "error"
+                and msg.name in failed_names
+            )
+        ),
+        default=-1,
+    )
+
+    if last_error < 0:
+        return False
+
+    non_tool_answers = sum(
+        isinstance(msg, AIMessage)
+        and not msg.tool_calls
+        for msg in messages[last_error + 1:]
+    )
+
+    return 1 <= non_tool_answers <= 2
+
+
+# ============================================================
+# 6. AGENT NODE
 # ============================================================
 
 async def agent_node(
     state: AgentState,
     safety: SafetyController,
 ) -> dict:
-    """Викликати LLM після перевірки обмежень."""
-
     completed_steps = state.get("step_count", 0)
 
     try:
@@ -113,11 +311,51 @@ async def agent_node(
         return {
             "safety_stop": error.reason,
             "safety_message": str(error),
-            "messages": [AIMessage(content=str(error))],
+            "messages": [
+                AIMessage(content=str(error))
+            ],
         }
 
-    response = await llm_with_tools.ainvoke([
-        SystemMessage(content=SYSTEM_PROMPT),
+    query = user_query_from_state(state)
+    allowed_tools = select_tools_for_query(query)
+
+    allowed_names = ", ".join(
+        tool.name
+        for tool in allowed_tools
+    )
+
+    prompt = (
+        SYSTEM_PROMPT
+        + f"\nДозволені інструменти: {allowed_names}."
+    )
+
+    if not is_release_decision_query(query):
+        prompt += (
+            "\nЗапит інформаційний: "
+            "не ухвалюй рішення про реліз."
+        )
+
+    missing = unresolved_failed_tools(state)
+
+    if missing:
+        prompt += (
+            "\nПопередній виклик інструмента завершився помилкою. "
+            "Ще потрібні достовірні результати: "
+            + ", ".join(sorted(missing))
+            + ". НЕ завершуй відповідь повідомленням про помилку; "
+            "повтори виклик із правильними скалярними аргументами. "
+            "Наприклад, service — це рядок 'api', "
+            "не опис типу поля."
+        )
+
+    # Зберігаємо сумісність із monkeypatch у unit-тестах.
+    if llm_with_tools is _default_llm_with_tools:
+        active_llm = llm.bind_tools(allowed_tools)
+    else:
+        active_llm = llm_with_tools
+
+    response = await active_llm.ainvoke([
+        SystemMessage(content=prompt),
         *state["messages"],
     ])
 
@@ -130,12 +368,10 @@ async def agent_node(
 
 
 # ============================================================
-# 5. OBSERVATIONS
+# 7. OBSERVATIONS
 # ============================================================
 
 def collect_observations(messages: list) -> dict:
-    """Зібрати результати успішно виконаних інструментів."""
-
     observations = {}
 
     for message in messages:
@@ -156,29 +392,35 @@ def collect_observations(messages: list) -> dict:
         except (ValueError, TypeError):
             continue
 
-        if not isinstance(data, dict) or "error" in data:
-            continue
-
-        service = data.get("service")
-
-        if service:
-            observations[(message.name, service)] = data
+        if (
+            isinstance(data, dict)
+            and "error" not in data
+            and data.get("service")
+        ):
+            observations[
+                (message.name, data["service"])
+            ] = data
 
     return observations
 
 
 # ============================================================
-# 6. RELEASE POLICY GUARD
+# 8. RELEASE POLICY GUARD
 # ============================================================
 
 def validate_release_policy_call(
     call: dict,
     observations: dict,
 ) -> str | None:
-    """Перевірити залежності та фактичні аргументи."""
 
     args = call["args"]
     service = args.get("service")
+
+    if not isinstance(service, str):
+        return (
+            "Некоректний параметр service: "
+            "очікується рядок, наприклад 'api'."
+        )
 
     status = observations.get(
         ("get_service_status", service)
@@ -211,93 +453,116 @@ def validate_release_policy_call(
 
 
 # ============================================================
-# 7. GUARDED TOOLS NODE
+# 9. GUARDED TOOLS NODE
 # ============================================================
 
 async def guarded_tools_node(
     state: AgentState,
     safety: SafetyController,
 ) -> dict:
-    """Виконати дозволені інструменти із захистом."""
 
     last_message = state["messages"][-1]
 
-    if not isinstance(last_message, AIMessage):
+    if (
+        not isinstance(last_message, AIMessage)
+        or not last_message.tool_calls
+    ):
         return {"messages": []}
 
     calls = last_message.tool_calls
 
-    if not calls:
-        return {"messages": []}
-
     try:
         for call in calls:
-            safety.before_tool(call["name"], call["args"])
+            safety.before_tool(
+                call["name"],
+                call["args"],
+            )
 
     except SafetyStop as error:
-        cancelled = [
-            ToolMessage(
-                content=f"Виклик скасовано: {error}",
-                tool_call_id=call["id"],
-                name=call["name"],
-                status="error",
-            )
-            for call in calls
-        ]
-
         return {
-            "messages": cancelled,
+            "messages": [
+                ToolMessage(
+                    content=f"Виклик скасовано: {error}",
+                    tool_call_id=call["id"],
+                    name=call["name"],
+                    status="error",
+                )
+                for call in calls
+            ],
             "safety_stop": error.reason,
             "safety_message": str(error),
         }
+
+    query = user_query_from_state(state)
+
+    allowed_names = {
+        tool.name
+        for tool in select_tools_for_query(query)
+    }
 
     observations = collect_observations(
         state["messages"][:-1]
     )
 
-    allowed_calls = []
-    rejected_messages = {}
+    accepted = []
+    rejected = {}
 
     for call in calls:
-        if call["name"] != "check_release_policy":
-            allowed_calls.append(call)
-            continue
+        name = call["name"]
+        call_id = call["id"]
 
-        error = validate_release_policy_call(
-            call,
-            observations,
-        )
+        reason = None
 
-        if error is None:
-            allowed_calls.append(call)
+        if name not in allowed_names:
+            reason = (
+                f"Виклик {name} відхилено: "
+                "інструмент не потрібен "
+                "для поточного запиту."
+            )
+
+        elif name == "check_release_policy":
+            if not is_release_decision_query(query):
+                reason = (
+                    "check_release_policy: користувач "
+                    "не запитував рішення про реліз."
+                )
+            else:
+                reason = validate_release_policy_call(
+                    call,
+                    observations,
+                )
+
+        if reason is None:
+            accepted.append(call)
+
         else:
-            rejected_messages[call["id"]] = ToolMessage(
-                content=error,
-                tool_call_id=call["id"],
-                name=call["name"],
+            rejected[call_id] = ToolMessage(
+                content=reason,
+                tool_call_id=call_id,
+                name=name,
                 status="error",
             )
 
-    executed_messages = []
+    executed = []
 
-    if allowed_calls:
-        synthetic_message = AIMessage(
+    if accepted:
+        synthetic = AIMessage(
             content="",
-            tool_calls=allowed_calls,
+            tool_calls=accepted,
         )
 
         execution = await tool_executor.ainvoke({
-            "messages": [synthetic_message],
+            "messages": [synthetic],
         })
 
-        executed_messages = execution["messages"]
+        executed = execution["messages"]
 
     responses = {
-        message.tool_call_id: message
-        for message in executed_messages
+        msg.tool_call_id: msg
+        for msg in executed
     }
 
-    responses.update(rejected_messages)
+    responses.update(rejected)
 
     return {
         "messages": [
@@ -308,129 +573,126 @@ async def guarded_tools_node(
 
 
 # ============================================================
-# 8. GROUNDED RELEASE ANSWER
+# 10. GROUNDED RELEASE ANSWER
 # ============================================================
-
-def is_release_decision_query(query: str) -> bool:
-    """Розпізнати запит про готовність або дозвіл релізу."""
-
-    text = query.casefold()
-
-    release_words = ("реліз", "релиз", "release")
-    decision_words = (
-        "можна", "можно", "випуск", "выпуск",
-        "дозвол", "разреш", "готов", "approve",
-        "deploy",
-    )
-
-    return (
-        any(word in text for word in release_words)
-        and any(word in text for word in decision_words)
-    )
-
 
 def build_grounded_release_answer(
     query: str,
     tool_results: list[dict],
     sources: list[str],
 ) -> FinalAnswer | None:
-    """Створити висновок про реліз лише з перевірених даних."""
 
     if not is_release_decision_query(query):
         return None
 
-    def find_latest(tool_name: str, service: str | None = None):
+    def latest(name, service=None):
         for item in reversed(tool_results):
-            if item.get("tool") != tool_name:
+            if item.get("tool") != name:
                 continue
 
             data = item.get("result")
 
-            if not isinstance(data, dict):
-                continue
-
-            if service is None or data.get("service") == service:
+            if (
+                isinstance(data, dict)
+                and (
+                    service is None
+                    or data.get("service") == service
+                )
+            ):
                 return data
 
         return None
 
-    def incomplete(message: str) -> FinalAnswer:
+    def incomplete(message):
         return FinalAnswer(
             answer=message,
             confidence=0.0,
             sources=sources,
         )
 
-    policy = find_latest("check_release_policy")
+    policy = latest("check_release_policy")
 
     if policy is None:
         return incomplete(
             "Готовність релізу не підтверджена: "
             "check_release_policy не було успішно виконано. "
-            "Автоматичний дозвіл на реліз відсутній."
+            "Автоматичний дозвіл відсутній."
         )
 
     service = policy.get("service")
 
-    status = find_latest("get_service_status", service)
-    tests = find_latest("get_test_results", service)
+    status = latest(
+        "get_service_status",
+        service,
+    )
+
+    tests = latest(
+        "get_test_results",
+        service,
+    )
 
     if not status or not tests:
         return incomplete(
-            "Недостатньо підтверджених даних для рішення "
-            "про готовність релізу."
+            "Недостатньо підтверджених даних "
+            "для рішення про реліз."
         )
 
     failed = tests.get("failed")
     coverage = tests.get("coverage_pct")
-    service_status = status.get("status")
+    health = status.get("status")
 
     if (
         not isinstance(failed, int)
         or isinstance(failed, bool)
         or not isinstance(coverage, (int, float))
         or isinstance(coverage, bool)
-        or service_status not in {"healthy", "degraded"}
+        or health not in {"healthy", "degraded"}
         or type(policy.get("approved")) is not bool
     ):
         return incomplete(
-            "Результати інструментів неповні або некоректні. "
-            "Рішення про реліз не підтверджено."
+            "Некоректні дані інструментів: "
+            "рішення про реліз не підтверджено."
         )
 
-    expected_approval = (
-        service_status == "healthy"
+    approved = (
+        health == "healthy"
         and failed == 0
         and coverage >= 90
     )
 
-    if policy["approved"] != expected_approval:
+    if approved != policy["approved"]:
         return incomplete(
-            "Виявлено суперечність між метриками та рішенням "
-            "політики релізу. Автоматичний дозвіл неможливий."
+            "Результати інструментів суперечать "
+            "рішенню політики релізу."
         )
 
-    version = tests.get("version", "невідомої версії")
+    version = tests.get(
+        "version",
+        "невідомої версії",
+    )
 
     facts = (
-        f"Сервіс {service}: статус {service_status}, "
+        f"Сервіс {service}: статус {health}, "
         f"провалених тестів {failed}, "
         f"покриття тестами {coverage}%."
     )
 
-    if expected_approval:
+    if approved:
         answer = (
             f"Реліз {service} версії {version} дозволено "
             f"згідно з демонстраційною політикою. "
             f"{facts} Усі критерії виконані."
         )
+
     else:
-        reasons = policy.get("reasons", [])
-        details = "; ".join(str(reason) for reason in reasons)
+        reasons = "; ".join(
+            str(item)
+            for item in policy.get("reasons", [])
+        )
 
         answer = (
             f"Реліз {service} версії {version} заборонено. "
-            f"{facts} Причини: {details}."
+            f"{facts} Причини: {reasons}."
         )
 
     return FinalAnswer(
@@ -441,23 +703,149 @@ def build_grounded_release_answer(
 
 
 # ============================================================
-# 9. FORMATTER NODE
+# 11. GROUNDED INFORMATION ANSWER
 # ============================================================
 
-async def formatter_node(state: AgentState) -> dict:
-    """Сформувати структурований або частковий результат."""
+def build_grounded_information_answer(
+    query: str,
+    tool_results: list[dict],
+) -> FinalAnswer | None:
 
-    user_query = ""
+    if is_release_decision_query(query):
+        return None
+
+    allowed = {
+        tool.name
+        for tool in select_tools_for_query(query)
+    }
+
+    facts = []
+    sources = []
+    seen = set()
+
+    for item in tool_results:
+        name = item.get("tool")
+        data = item.get("result")
+
+        if (
+            name not in allowed
+            or not isinstance(data, dict)
+        ):
+            continue
+
+        service = data.get("service")
+
+        if not isinstance(service, str):
+            continue
+
+        key = None
+        fact = None
+
+        if (
+            name == "get_service_status"
+            and data.get("status") is not None
+        ):
+            key = (name, service)
+
+            fact = (
+                f"Сервіс {service}: статус {data['status']}."
+            )
+
+            if data.get("latency_ms") is not None:
+                fact += (
+                    f" Затримка {data['latency_ms']} мс."
+                )
+
+        elif name == "get_test_results":
+            required = (
+                "version",
+                "passed",
+                "failed",
+                "coverage_pct",
+            )
+
+            if any(
+                data.get(field) is None
+                for field in required
+            ):
+                continue
+
+            key = (
+                name,
+                service,
+                data["version"],
+            )
+
+            fact = (
+                f"Результати тестування {service} "
+                f"версії {data['version']}: "
+                f"пройдено тестів {data['passed']}, "
+                f"провалених тестів {data['failed']}, "
+                f"покриття тестами {data['coverage_pct']}%."
+            )
+
+        elif name == "get_deployment_history":
+            deployments = data.get("deployments")
+
+            if not isinstance(deployments, list):
+                continue
+
+            entries = [
+                f"версія {d['version']} — {d['result']}"
+                for d in deployments
+                if (
+                    isinstance(d, dict)
+                    and "version" in d
+                    and "result" in d
+                )
+            ]
+
+            if not entries:
+                continue
+
+            key = (name, service)
+
+            fact = (
+                f"Історія розгортань {service}: "
+                + "; ".join(entries)
+                + "."
+            )
+
+        if fact is None or key in seen:
+            continue
+
+        seen.add(key)
+        facts.append(fact)
+
+        if name not in sources:
+            sources.append(name)
+
+    if not facts:
+        return None
+
+    return FinalAnswer(
+        answer=" ".join(facts),
+        confidence=1.0,
+        sources=sources,
+    )
+
+
+# ============================================================
+# 12. FORMATTER NODE
+# ============================================================
+
+async def formatter_node(
+    state: AgentState,
+) -> dict:
+
+    query = user_query_from_state(state)
+
     agent_answer = ""
     tool_results = []
     actual_sources = []
 
     for message in state["messages"]:
-        if isinstance(message, HumanMessage):
-            if not user_query:
-                user_query = str(message.content)
-
-        elif isinstance(message, ToolMessage):
+        if isinstance(message, ToolMessage):
             if message.status == "error":
                 continue
 
@@ -466,7 +854,10 @@ async def formatter_node(state: AgentState) -> dict:
             except (ValueError, TypeError):
                 continue
 
-            if not isinstance(data, dict) or "error" in data:
+            if (
+                not isinstance(data, dict)
+                or "error" in data
+            ):
                 continue
 
             tool_results.append({
@@ -477,13 +868,23 @@ async def formatter_node(state: AgentState) -> dict:
             if message.name not in actual_sources:
                 actual_sources.append(message.name)
 
-        elif isinstance(message, AIMessage):
-            if not message.tool_calls and message.content:
-                agent_answer = str(message.content)
+        elif (
+            isinstance(message, AIMessage)
+            and not message.tool_calls
+            and message.content
+        ):
+            agent_answer = str(message.content)
+
+    # --------------------------------------------------------
+    # Safety stop
+    # --------------------------------------------------------
 
     if state.get("safety_stop"):
-        partial_data = (
-            json.dumps(tool_results, ensure_ascii=False)
+        details = (
+            json.dumps(
+                tool_results,
+                ensure_ascii=False,
+            )
             if tool_results
             else "Результатів інструментів ще немає."
         )
@@ -492,43 +893,114 @@ async def formatter_node(state: AgentState) -> dict:
             answer=(
                 "Виконання зупинено: "
                 f"{state.get('safety_message', state['safety_stop'])} "
-                f"Отримані дані: {partial_data}. "
-                "Остаточний висновок не сформовано "
-                "через обмеження виконання."
+                f"Отримані дані: {details}. "
+                "Остаточний висновок не сформовано."
             ),
             confidence=0.0,
             sources=actual_sources,
         )
 
-        return {"final_answer": final.model_dump()}
+        return {
+            "final_answer": final.model_dump()
+        }
 
-    grounded = build_grounded_release_answer(
-        user_query,
+    # --------------------------------------------------------
+    # Deterministic release decision
+    # --------------------------------------------------------
+
+    release = build_grounded_release_answer(
+        query,
         tool_results,
         actual_sources,
     )
 
-    if grounded is not None:
-        return {"final_answer": grounded.model_dump()}
+    if release is not None:
+        return {
+            "final_answer": release.model_dump()
+        }
+
+    # --------------------------------------------------------
+    # Deterministic information response
+    # --------------------------------------------------------
+
+    information = build_grounded_information_answer(
+        query,
+        tool_results,
+    )
+
+    if information is not None:
+        return {
+            "final_answer": information.model_dump()
+        }
+
+    # --------------------------------------------------------
+    # Unresolved tool failure
+    # --------------------------------------------------------
+
+    if unresolved_failed_tools(state):
+        final = FinalAnswer(
+            answer=(
+                "Не вдалося отримати достовірні результати "
+                "запитаних інструментів після спроб "
+                "виправлення аргументів."
+            ),
+            confidence=0.0,
+            sources=actual_sources,
+        )
+
+        return {
+            "final_answer": final.model_dump()
+        }
+
+    # --------------------------------------------------------
+    # Structured LLM with validation fallback
+    # --------------------------------------------------------
 
     evidence = {
-        "query": user_query,
+        "query": query,
         "agent_answer": agent_answer,
         "tool_results": tool_results,
     }
 
-    response = await structured_llm.ainvoke([
-        SystemMessage(content=FORMATTER_PROMPT),
-        HumanMessage(
-            content=json.dumps(
-                evidence,
-                ensure_ascii=False,
-                indent=2,
-            )
-        ),
-    ])
+    try:
+        response = await structured_llm.ainvoke([
+            SystemMessage(content=FORMATTER_PROMPT),
+            HumanMessage(
+                content=json.dumps(
+                    evidence,
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            ),
+        ])
 
-    validated = response.model_copy(
+        validated = FinalAnswer.model_validate(
+            response
+        )
+
+    except (
+        OutputParserException,
+        ValidationError,
+        ValueError,
+        TypeError,
+    ):
+        # Невалідний confidence не виправляємо
+        # автоматично. Повертаємо безпечну відповідь.
+        final = FinalAnswer(
+            answer=(
+                "Не вдалося сформувати валідну "
+                "структуровану відповідь. "
+                "Підтверджені дані відсутні або неповні."
+            ),
+            confidence=0.0,
+            sources=actual_sources,
+        )
+
+        return {
+            "final_answer": final.model_dump()
+        }
+
+    validated = validated.model_copy(
         update={"sources": actual_sources}
     )
 
@@ -539,24 +1011,28 @@ async def formatter_node(state: AgentState) -> dict:
 
 
 # ============================================================
-# 10. ROUTING
+# 13. ROUTING
 # ============================================================
 
 def router(
     state: AgentState,
-) -> Literal["tools", "formatter"]:
-    """Обрати наступний вузол після agent."""
+) -> Literal["tools", "agent", "formatter"]:
 
     if state.get("safety_stop"):
         return "formatter"
 
-    last_message = state["messages"][-1]
+    last = state["messages"][-1]
 
     if (
-        isinstance(last_message, AIMessage)
-        and last_message.tool_calls
+        isinstance(last, AIMessage)
+        and last.tool_calls
     ):
         return "tools"
+
+    # Якщо модель відповіла текстом замість
+    # виправлення аргументів, повторюємо agent.
+    if should_retry_failed_tools(state):
+        return "agent"
 
     return "formatter"
 
@@ -564,7 +1040,6 @@ def router(
 def after_tools(
     state: AgentState,
 ) -> Literal["agent", "formatter"]:
-    """Повернутися до agent або завершити виконання."""
 
     if state.get("safety_stop"):
         return "formatter"
@@ -573,11 +1048,12 @@ def after_tools(
 
 
 # ============================================================
-# 11. TRAJECTORY LOGGING
+# 14. TRAJECTORY LOGGING
 # ============================================================
 
-def message_snapshot(message: AnyMessage) -> dict:
-    """Підготувати повідомлення для JSON-логу."""
+def message_snapshot(
+    message: AnyMessage,
+) -> dict:
 
     data = {
         "type": message.type,
@@ -588,15 +1064,18 @@ def message_snapshot(message: AnyMessage) -> dict:
         data["tool_calls"] = message.tool_calls
 
     if isinstance(message, ToolMessage):
-        data["name"] = message.name
-        data["status"] = message.status
-        data["tool_call_id"] = message.tool_call_id
+        data.update({
+            "name": message.name,
+            "status": message.status,
+            "tool_call_id": message.tool_call_id,
+        })
 
     return data
 
 
-def state_snapshot(state: AgentState) -> dict:
-    """Підготувати вхідний стан вузла до логування."""
+def state_snapshot(
+    state: AgentState,
+) -> dict:
 
     messages = state.get("messages", [])
 
@@ -617,31 +1096,32 @@ def extract_tool_calls(
     state: AgentState,
     output: dict,
 ) -> list[dict]:
-    """Отримати виклики інструментів для запису траєкторії."""
 
     if node_name == "agent":
-        messages = output.get("messages", [])
+        messages = output.get(
+            "messages",
+            [],
+        )
 
     elif node_name == "tools":
-        messages = state.get("messages", [])[-1:]
+        messages = state.get(
+            "messages",
+            [],
+        )[-1:]
 
     else:
         messages = []
 
-    calls = []
-
-    for message in messages:
-        if not isinstance(message, AIMessage):
-            continue
-
-        for call in message.tool_calls:
-            calls.append({
-                "name": call["name"],
-                "args": call["args"],
-                "id": call["id"],
-            })
-
-    return calls
+    return [
+        {
+            "name": call["name"],
+            "args": call["args"],
+            "id": call["id"],
+        }
+        for message in messages
+        if isinstance(message, AIMessage)
+        for call in message.tool_calls
+    ]
 
 
 async def observed_node(
@@ -650,11 +1130,6 @@ async def observed_node(
     callback,
     logger: TrajectoryLogger | None,
 ) -> dict:
-    """Виконати вузол та записати реальну тривалість.
-
-    Помилки й скасування також логуються.
-    Якщо logger не передано, вузол працює як звичайно.
-    """
 
     started = time.monotonic()
 
@@ -670,40 +1145,46 @@ async def observed_node(
                     "error_type": type(error).__name__,
                     "message": str(error),
                     "cancelled": isinstance(
-                        error, asyncio.CancelledError
+                        error,
+                        asyncio.CancelledError,
                     ),
                 },
                 duration_ms=(
                     time.monotonic() - started
                 ) * 1000,
                 tool_calls=extract_tool_calls(
-                    node_name, state, {}
+                    node_name,
+                    state,
+                    {},
                 ),
             )
 
         raise
 
     if logger is not None:
-        serialized_output = {}
-
-        for key, value in output.items():
-            if key == "messages":
-                serialized_output[key] = [
-                    message_snapshot(message)
-                    for message in value
+        serialized = {
+            key: (
+                [
+                    message_snapshot(msg)
+                    for msg in value
                 ]
-            else:
-                serialized_output[key] = value
+                if key == "messages"
+                else value
+            )
+            for key, value in output.items()
+        }
 
         logger.log_step(
             node_name=node_name,
             input_data=state_snapshot(state),
-            output_data=serialized_output,
+            output_data=serialized,
             duration_ms=(
                 time.monotonic() - started
             ) * 1000,
             tool_calls=extract_tool_calls(
-                node_name, state, output
+                node_name,
+                state,
+                output,
             ),
         )
 
@@ -711,40 +1192,44 @@ async def observed_node(
 
 
 # ============================================================
-# 12. GRAPH FACTORY
+# 15. GRAPH FACTORY
 # ============================================================
 
 def build_graph(
     safety_config: SafetyConfig | None = None,
     logger: TrajectoryLogger | None = None,
 ):
-    """Створити ReAct-граф із захистом та логуванням."""
-
     safety = SafetyController(safety_config)
-
     graph = StateGraph(AgentState)
 
     async def agent(state: AgentState) -> dict:
-        async def execute(current_state):
-            return await agent_node(current_state, safety)
-
         return await observed_node(
-            "agent", state, execute, logger
+            "agent",
+            state,
+            lambda current: agent_node(
+                current,
+                safety,
+            ),
+            logger,
         )
 
     async def tools(state: AgentState) -> dict:
-        async def execute(current_state):
-            return await guarded_tools_node(
-                current_state, safety
-            )
-
         return await observed_node(
-            "tools", state, execute, logger
+            "tools",
+            state,
+            lambda current: guarded_tools_node(
+                current,
+                safety,
+            ),
+            logger,
         )
 
     async def formatter(state: AgentState) -> dict:
         return await observed_node(
-            "formatter", state, formatter_node, logger
+            "formatter",
+            state,
+            formatter_node,
+            logger,
         )
 
     graph.add_node("agent", agent)
@@ -758,6 +1243,7 @@ def build_graph(
         router,
         {
             "tools": "tools",
+            "agent": "agent",
             "formatter": "formatter",
         },
     )
@@ -780,7 +1266,7 @@ app = build_graph()
 
 
 # ============================================================
-# 13. TIMEOUT-AWARE EXECUTION
+# 16. TIMEOUT-AWARE EXECUTION
 # ============================================================
 
 async def execute_query(
@@ -790,7 +1276,6 @@ async def execute_query(
     timeout_seconds: float = 120.0,
     trajectory_path: str = "trajectory.json",
 ) -> dict:
-    """Виконати граф і зберегти траєкторію у JSON."""
 
     config = SafetyConfig(
         max_steps=max_steps,
@@ -798,18 +1283,25 @@ async def execute_query(
         timeout_seconds=timeout_seconds,
     )
 
-    # Кожен запит отримує власний логер і граф.
     logger = TrajectoryLogger(query)
-    graph = build_graph(config, logger=logger)
+
+    graph = build_graph(
+        config,
+        logger=logger,
+    )
 
     state = {
-        "messages": [HumanMessage(content=query)],
+        "messages": [
+            HumanMessage(content=query)
+        ],
         "step_count": 0,
     }
 
     try:
         try:
-            async with asyncio.timeout(timeout_seconds):
+            async with asyncio.timeout(
+                timeout_seconds
+            ):
                 async for chunk in graph.astream(
                     state,
                     stream_mode="updates",
@@ -835,39 +1327,40 @@ async def execute_query(
                                 state[key] = value
 
         except TimeoutError:
-            # Зберігаємо вже завершені вузли та факти.
             state["safety_stop"] = "timeout"
             state["safety_message"] = (
-                f"Перевищено загальний timeout "
+                "Перевищено загальний timeout "
                 f"({timeout_seconds} с)"
             )
 
             logger.log_step(
                 node_name="safety",
-                input_data={"timeout_seconds": timeout_seconds},
-                output_data={"reason": "timeout"},
+                input_data={
+                    "timeout_seconds": timeout_seconds,
+                },
+                output_data={
+                    "reason": "timeout",
+                },
                 duration_ms=0.0,
             )
 
-            # Без нового LLM-виклику формуємо часткову відповідь.
             partial = await observed_node(
                 "formatter",
                 state,
                 formatter_node,
                 logger,
             )
+
             state.update(partial)
 
         return state
 
     finally:
-        # JSON зберігається і при нормальному завершенні,
-        # і при timeout, і при непередбаченій помилці.
         logger.save(trajectory_path)
 
 
 # ============================================================
-# 14. PUBLIC INTERFACE
+# 17. PUBLIC INTERFACE
 # ============================================================
 
 def run_query(
@@ -877,7 +1370,6 @@ def run_query(
     timeout_seconds: float = 120.0,
     trajectory_path: str = "trajectory.json",
 ) -> dict:
-    """Запустити агента із Git Bash або CLI."""
 
     result = asyncio.run(
         execute_query(
@@ -897,8 +1389,12 @@ def run_query(
 
         elif isinstance(message, AIMessage):
             for call in message.tool_calls:
-                print(f"\nAGENT → TOOL: {call['name']}")
-                print(f"ARGUMENTS: {call['args']}")
+                print(
+                    f"\nAGENT → TOOL: {call['name']}"
+                )
+                print(
+                    f"ARGUMENTS: {call['args']}"
+                )
 
         elif isinstance(message, ToolMessage):
             prefix = (
@@ -914,7 +1410,10 @@ def run_query(
 
     if result.get("safety_stop"):
         print("\n=== SAFETY STOP ===")
-        print("REASON:", result["safety_stop"])
+        print(
+            "REASON:",
+            result["safety_stop"],
+        )
 
     print("\n=== STRUCTURED FINAL ANSWER ===")
 
@@ -922,16 +1421,25 @@ def run_query(
         result["final_answer"]
     )
 
-    print(final.model_dump_json(indent=2))
-    print("\nLLM CALLS:", result["step_count"])
+    print(
+        final.model_dump_json(indent=2)
+    )
 
-    print("\nTRAJECTORY FILE:", trajectory_path)
+    print(
+        "\nLLM CALLS:",
+        result["step_count"],
+    )
+
+    print(
+        "\nTRAJECTORY FILE:",
+        trajectory_path,
+    )
 
     return result
 
 
 # ============================================================
-# 15. ENTRY POINT
+# 18. ENTRY POINT
 # ============================================================
 
 if __name__ == "__main__":
