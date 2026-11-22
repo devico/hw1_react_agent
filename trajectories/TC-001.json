@@ -1,7 +1,7 @@
 {
   "query": "Перевір поточний стан сервісу api.",
   "total_steps": 4,
-  "total_time_ms": 3922.0,
+  "total_time_ms": 4047.0,
   "trajectory": [
     {
       "step_number": 1,
@@ -26,7 +26,7 @@
                 "args": {
                   "service": "api"
                 },
-                "id": "2ec997a1-5dea-47db-a160-3247a17cb5a3",
+                "id": "fbb747fd-29d6-4fdf-ae89-cea746211f96",
                 "type": "tool_call"
               }
             ]
@@ -40,12 +40,12 @@
           "args": {
             "service": "api"
           },
-          "id": "2ec997a1-5dea-47db-a160-3247a17cb5a3"
+          "id": "fbb747fd-29d6-4fdf-ae89-cea746211f96"
         }
       ],
-      "timestamp": "2026-11-22T20:43:41.933877+00:00",
-      "duration_ms": 3250.0,
-      "elapsed_ms": 3250.0
+      "timestamp": "2026-11-22T21:06:07.587482+00:00",
+      "duration_ms": 3219.0,
+      "elapsed_ms": 3219.0
     },
     {
       "step_number": 2,
@@ -62,7 +62,7 @@
               "args": {
                 "service": "api"
               },
-              "id": "2ec997a1-5dea-47db-a160-3247a17cb5a3",
+              "id": "fbb747fd-29d6-4fdf-ae89-cea746211f96",
               "type": "tool_call"
             }
           ]
@@ -76,7 +76,7 @@
             "content": "{\"service\": \"api\", \"status\": \"healthy\", \"latency_ms\": 120}",
             "name": "get_service_status",
             "status": "success",
-            "tool_call_id": "2ec997a1-5dea-47db-a160-3247a17cb5a3"
+            "tool_call_id": "fbb747fd-29d6-4fdf-ae89-cea746211f96"
           }
         ]
       },
@@ -86,12 +86,12 @@
           "args": {
             "service": "api"
           },
-          "id": "2ec997a1-5dea-47db-a160-3247a17cb5a3"
+          "id": "fbb747fd-29d6-4fdf-ae89-cea746211f96"
         }
       ],
-      "timestamp": "2026-11-22T20:43:41.935950+00:00",
+      "timestamp": "2026-11-22T21:06:07.588055+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 3250.0
+      "elapsed_ms": 3219.0
     },
     {
       "step_number": 3,
@@ -104,7 +104,7 @@
           "content": "{\"service\": \"api\", \"status\": \"healthy\", \"latency_ms\": 120}",
           "name": "get_service_status",
           "status": "success",
-          "tool_call_id": "2ec997a1-5dea-47db-a160-3247a17cb5a3"
+          "tool_call_id": "fbb747fd-29d6-4fdf-ae89-cea746211f96"
         },
         "safety_stop": null
       },
@@ -112,16 +112,16 @@
         "messages": [
           {
             "type": "ai",
-            "content": "Сервіс api відображає статус \"healthy\" і загальна затримка становить 120 мілісекунд.",
+            "content": "Сервіс api відображає статус \"healthy\" і мінімальна затримка відповіді становить 120 мілісекунд.",
             "tool_calls": []
           }
         ],
         "step_count": 2
       },
       "tool_calls": [],
-      "timestamp": "2026-11-22T20:43:42.605448+00:00",
-      "duration_ms": 672.0,
-      "elapsed_ms": 3922.0
+      "timestamp": "2026-11-22T21:06:08.424699+00:00",
+      "duration_ms": 828.0,
+      "elapsed_ms": 4047.0
     },
     {
       "step_number": 4,
@@ -131,7 +131,7 @@
         "messages_count": 4,
         "last_message": {
           "type": "ai",
-          "content": "Сервіс api відображає статус \"healthy\" і загальна затримка становить 120 мілісекунд.",
+          "content": "Сервіс api відображає статус \"healthy\" і мінімальна затримка відповіді становить 120 мілісекунд.",
           "tool_calls": []
         },
         "safety_stop": null
@@ -146,9 +146,9 @@
         }
       },
       "tool_calls": [],
-      "timestamp": "2026-11-22T20:43:42.605448+00:00",
+      "timestamp": "2026-11-22T21:06:08.425784+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 3922.0
+      "elapsed_ms": 4047.0
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "query": "Чи можна випускати реліз payments версії 2.1.0? Перевір стан сервісу, результати тестів та політику релізу.",
   "total_steps": 6,
-  "total_time_ms": 4562.0,
+  "total_time_ms": 4734.0,
   "trajectory": [
     {
       "step_number": 1,
@@ -26,7 +26,7 @@
                 "args": {
                   "service": "payments"
                 },
-                "id": "2d2f20b7-821a-4e03-87e5-229030a563ce",
+                "id": "a15b2a15-8ce5-4da7-aa05-3acb241df8bb",
                 "type": "tool_call"
               },
               {
@@ -35,7 +35,7 @@
                   "service": "payments",
                   "version": "2.1.0"
                 },
-                "id": "46cf70db-5c0c-4a4f-adf1-32ce23933714",
+                "id": "654a820a-0859-4fb1-965f-d1268b7cbbe8",
                 "type": "tool_call"
               }
             ]
@@ -49,7 +49,7 @@
           "args": {
             "service": "payments"
           },
-          "id": "2d2f20b7-821a-4e03-87e5-229030a563ce"
+          "id": "a15b2a15-8ce5-4da7-aa05-3acb241df8bb"
         },
         {
           "name": "get_test_results",
@@ -57,12 +57,12 @@
             "service": "payments",
             "version": "2.1.0"
           },
-          "id": "46cf70db-5c0c-4a4f-adf1-32ce23933714"
+          "id": "654a820a-0859-4fb1-965f-d1268b7cbbe8"
         }
       ],
-      "timestamp": "2026-11-22T20:43:52.048197+00:00",
-      "duration_ms": 843.0,
-      "elapsed_ms": 843.0
+      "timestamp": "2026-11-22T21:06:16.758193+00:00",
+      "duration_ms": 1125.0,
+      "elapsed_ms": 1125.0
     },
     {
       "step_number": 2,
@@ -79,7 +79,7 @@
               "args": {
                 "service": "payments"
               },
-              "id": "2d2f20b7-821a-4e03-87e5-229030a563ce",
+              "id": "a15b2a15-8ce5-4da7-aa05-3acb241df8bb",
               "type": "tool_call"
             },
             {
@@ -88,7 +88,7 @@
                 "service": "payments",
                 "version": "2.1.0"
               },
-              "id": "46cf70db-5c0c-4a4f-adf1-32ce23933714",
+              "id": "654a820a-0859-4fb1-965f-d1268b7cbbe8",
               "type": "tool_call"
             }
           ]
@@ -102,14 +102,14 @@
             "content": "{\"service\": \"payments\", \"status\": \"degraded\", \"latency_ms\": 850}",
             "name": "get_service_status",
             "status": "success",
-            "tool_call_id": "2d2f20b7-821a-4e03-87e5-229030a563ce"
+            "tool_call_id": "a15b2a15-8ce5-4da7-aa05-3acb241df8bb"
           },
           {
             "type": "tool",
             "content": "{\"service\": \"payments\", \"version\": \"2.1.0\", \"passed\": 96, \"failed\": 4, \"coverage_pct\": 87.0}",
             "name": "get_test_results",
             "status": "success",
-            "tool_call_id": "46cf70db-5c0c-4a4f-adf1-32ce23933714"
+            "tool_call_id": "654a820a-0859-4fb1-965f-d1268b7cbbe8"
           }
         ]
       },
@@ -119,7 +119,7 @@
           "args": {
             "service": "payments"
           },
-          "id": "2d2f20b7-821a-4e03-87e5-229030a563ce"
+          "id": "a15b2a15-8ce5-4da7-aa05-3acb241df8bb"
         },
         {
           "name": "get_test_results",
@@ -127,12 +127,12 @@
             "service": "payments",
             "version": "2.1.0"
           },
-          "id": "46cf70db-5c0c-4a4f-adf1-32ce23933714"
+          "id": "654a820a-0859-4fb1-965f-d1268b7cbbe8"
         }
       ],
-      "timestamp": "2026-11-22T20:43:52.049907+00:00",
+      "timestamp": "2026-11-22T21:06:16.760803+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 843.0
+      "elapsed_ms": 1125.0
     },
     {
       "step_number": 3,
@@ -145,7 +145,7 @@
           "content": "{\"service\": \"payments\", \"version\": \"2.1.0\", \"passed\": 96, \"failed\": 4, \"coverage_pct\": 87.0}",
           "name": "get_test_results",
           "status": "success",
-          "tool_call_id": "46cf70db-5c0c-4a4f-adf1-32ce23933714"
+          "tool_call_id": "654a820a-0859-4fb1-965f-d1268b7cbbe8"
         },
         "safety_stop": null
       },
@@ -158,12 +158,12 @@
               {
                 "name": "check_release_policy",
                 "args": {
-                  "coverage_pct": 87,
                   "service": "payments",
                   "status": "degraded",
-                  "failed_tests": 4
+                  "failed_tests": 4,
+                  "coverage_pct": 87
                 },
-                "id": "54bd0f6c-724f-467e-8791-f7e1875a3e9b",
+                "id": "a32b244e-483f-42d3-a453-4ce1a8fe3235",
                 "type": "tool_call"
               }
             ]
@@ -175,17 +175,17 @@
         {
           "name": "check_release_policy",
           "args": {
-            "coverage_pct": 87,
             "service": "payments",
             "status": "degraded",
-            "failed_tests": 4
+            "failed_tests": 4,
+            "coverage_pct": 87
           },
-          "id": "54bd0f6c-724f-467e-8791-f7e1875a3e9b"
+          "id": "a32b244e-483f-42d3-a453-4ce1a8fe3235"
         }
       ],
-      "timestamp": "2026-11-22T20:43:52.801575+00:00",
+      "timestamp": "2026-11-22T21:06:17.509881+00:00",
       "duration_ms": 750.0,
-      "elapsed_ms": 1593.0
+      "elapsed_ms": 1875.0
     },
     {
       "step_number": 4,
@@ -200,12 +200,12 @@
             {
               "name": "check_release_policy",
               "args": {
-                "coverage_pct": 87,
                 "service": "payments",
                 "status": "degraded",
-                "failed_tests": 4
+                "failed_tests": 4,
+                "coverage_pct": 87
               },
-              "id": "54bd0f6c-724f-467e-8791-f7e1875a3e9b",
+              "id": "a32b244e-483f-42d3-a453-4ce1a8fe3235",
               "type": "tool_call"
             }
           ]
@@ -219,7 +219,7 @@
             "content": "{\"service\": \"payments\", \"approved\": false, \"reasons\": [\"Сервіс не має статусу healthy\", \"Є провалені тести\", \"Покриття тестами менше 90%\"]}",
             "name": "check_release_policy",
             "status": "success",
-            "tool_call_id": "54bd0f6c-724f-467e-8791-f7e1875a3e9b"
+            "tool_call_id": "a32b244e-483f-42d3-a453-4ce1a8fe3235"
           }
         ]
       },
@@ -227,17 +227,17 @@
         {
           "name": "check_release_policy",
           "args": {
-            "coverage_pct": 87,
             "service": "payments",
             "status": "degraded",
-            "failed_tests": 4
+            "failed_tests": 4,
+            "coverage_pct": 87
           },
-          "id": "54bd0f6c-724f-467e-8791-f7e1875a3e9b"
+          "id": "a32b244e-483f-42d3-a453-4ce1a8fe3235"
         }
       ],
-      "timestamp": "2026-11-22T20:43:52.802942+00:00",
+      "timestamp": "2026-11-22T21:06:17.511457+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 1593.0
+      "elapsed_ms": 1875.0
     },
     {
       "step_number": 5,
@@ -250,7 +250,7 @@
           "content": "{\"service\": \"payments\", \"approved\": false, \"reasons\": [\"Сервіс не має статусу healthy\", \"Є провалені тести\", \"Покриття тестами менше 90%\"]}",
           "name": "check_release_policy",
           "status": "success",
-          "tool_call_id": "54bd0f6c-724f-467e-8791-f7e1875a3e9b"
+          "tool_call_id": "a32b244e-483f-42d3-a453-4ce1a8fe3235"
         },
         "safety_stop": null
       },
@@ -258,16 +258,16 @@
         "messages": [
           {
             "type": "ai",
-            "content": "На жаль, реліз версії 2.1.0 для сервісу payments не може бути дозволений за наступними причинами:\n\n1. Статус сервісу — degraded, а не healthy.\n2. Кількість провалених тестів — 4, що перевищує 0.\n3. Покриття тестами — 87.0%, що менше 90%.\n\nДля того щоб реліз був дозволений, потрібно, щоб сервіс мав статус healthy, всі тести пройшли успішно (0 провалених тестів) та покриття тестами було не менше 90%.",
+            "content": "На жаль, реліз версії 2.1.0 для сервісу payments не може бути дозволений за наступними причинами:\n\n1. Статус сервісу — degraded, а не healthy.\n2. Кількість провалених тестів — 4, що перевищує 0.\n3. Покриття тестами — 87.0%, що менше 90%.\n\nДля того щоб реліз був дозволений, потрібно, щоб сервіс мав статус healthy, всі тести пройшли успішно (0 провалених), а покриття тестами було не менше 90%.",
             "tool_calls": []
           }
         ],
         "step_count": 3
       },
       "tool_calls": [],
-      "timestamp": "2026-11-22T20:43:55.759311+00:00",
-      "duration_ms": 2969.0,
-      "elapsed_ms": 4562.0
+      "timestamp": "2026-11-22T21:06:20.378558+00:00",
+      "duration_ms": 2859.0,
+      "elapsed_ms": 4734.0
     },
     {
       "step_number": 6,
@@ -277,7 +277,7 @@
         "messages_count": 7,
         "last_message": {
           "type": "ai",
-          "content": "На жаль, реліз версії 2.1.0 для сервісу payments не може бути дозволений за наступними причинами:\n\n1. Статус сервісу — degraded, а не healthy.\n2. Кількість провалених тестів — 4, що перевищує 0.\n3. Покриття тестами — 87.0%, що менше 90%.\n\nДля того щоб реліз був дозволений, потрібно, щоб сервіс мав статус healthy, всі тести пройшли успішно (0 провалених тестів) та покриття тестами було не менше 90%.",
+          "content": "На жаль, реліз версії 2.1.0 для сервісу payments не може бути дозволений за наступними причинами:\n\n1. Статус сервісу — degraded, а не healthy.\n2. Кількість провалених тестів — 4, що перевищує 0.\n3. Покриття тестами — 87.0%, що менше 90%.\n\nДля того щоб реліз був дозволений, потрібно, щоб сервіс мав статус healthy, всі тести пройшли успішно (0 провалених), а покриття тестами було не менше 90%.",
           "tool_calls": []
         },
         "safety_stop": null
@@ -294,9 +294,9 @@
         }
       },
       "tool_calls": [],
-      "timestamp": "2026-11-22T20:43:55.759837+00:00",
+      "timestamp": "2026-11-22T21:06:20.379550+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 4562.0
+      "elapsed_ms": 4734.0
     }
   ]
 }

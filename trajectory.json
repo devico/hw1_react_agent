@@ -1,7 +1,7 @@
 {
   "query": "Чи можна випускати реліз api версії 1.4.0? Перевір стан сервісу, результати тестів та політику релізу.",
   "total_steps": 6,
-  "total_time_ms": 4094.0,
+  "total_time_ms": 2844.0,
   "trajectory": [
     {
       "step_number": 1,
@@ -26,7 +26,7 @@
                 "args": {
                   "service": "api"
                 },
-                "id": "383d4448-b892-4269-8ac6-b1817b2aacc7",
+                "id": "d96ddbca-88a2-4e79-80b7-012c332f352e",
                 "type": "tool_call"
               },
               {
@@ -35,7 +35,7 @@
                   "service": "api",
                   "version": "1.4.0"
                 },
-                "id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa",
+                "id": "28c686fa-7344-4fbc-a1db-9795430a05bc",
                 "type": "tool_call"
               }
             ]
@@ -49,7 +49,7 @@
           "args": {
             "service": "api"
           },
-          "id": "383d4448-b892-4269-8ac6-b1817b2aacc7"
+          "id": "d96ddbca-88a2-4e79-80b7-012c332f352e"
         },
         {
           "name": "get_test_results",
@@ -57,12 +57,12 @@
             "service": "api",
             "version": "1.4.0"
           },
-          "id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa"
+          "id": "28c686fa-7344-4fbc-a1db-9795430a05bc"
         }
       ],
-      "timestamp": "2026-11-22T20:43:48.208937+00:00",
-      "duration_ms": 1094.0,
-      "elapsed_ms": 1094.0
+      "timestamp": "2026-11-22T21:06:13.947497+00:00",
+      "duration_ms": 1157.0,
+      "elapsed_ms": 1157.0
     },
     {
       "step_number": 2,
@@ -79,7 +79,7 @@
               "args": {
                 "service": "api"
               },
-              "id": "383d4448-b892-4269-8ac6-b1817b2aacc7",
+              "id": "d96ddbca-88a2-4e79-80b7-012c332f352e",
               "type": "tool_call"
             },
             {
@@ -88,7 +88,7 @@
                 "service": "api",
                 "version": "1.4.0"
               },
-              "id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa",
+              "id": "28c686fa-7344-4fbc-a1db-9795430a05bc",
               "type": "tool_call"
             }
           ]
@@ -102,14 +102,14 @@
             "content": "{\"service\": \"api\", \"status\": \"healthy\", \"latency_ms\": 120}",
             "name": "get_service_status",
             "status": "success",
-            "tool_call_id": "383d4448-b892-4269-8ac6-b1817b2aacc7"
+            "tool_call_id": "d96ddbca-88a2-4e79-80b7-012c332f352e"
           },
           {
             "type": "tool",
             "content": "{\"service\": \"api\", \"version\": \"1.4.0\", \"passed\": 120, \"failed\": 0, \"coverage_pct\": 94.0}",
             "name": "get_test_results",
             "status": "success",
-            "tool_call_id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa"
+            "tool_call_id": "28c686fa-7344-4fbc-a1db-9795430a05bc"
           }
         ]
       },
@@ -119,7 +119,7 @@
           "args": {
             "service": "api"
           },
-          "id": "383d4448-b892-4269-8ac6-b1817b2aacc7"
+          "id": "d96ddbca-88a2-4e79-80b7-012c332f352e"
         },
         {
           "name": "get_test_results",
@@ -127,12 +127,12 @@
             "service": "api",
             "version": "1.4.0"
           },
-          "id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa"
+          "id": "28c686fa-7344-4fbc-a1db-9795430a05bc"
         }
       ],
-      "timestamp": "2026-11-22T20:43:48.210646+00:00",
+      "timestamp": "2026-11-22T21:06:13.949626+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 1109.0
+      "elapsed_ms": 1157.0
     },
     {
       "step_number": 3,
@@ -145,7 +145,7 @@
           "content": "{\"service\": \"api\", \"version\": \"1.4.0\", \"passed\": 120, \"failed\": 0, \"coverage_pct\": 94.0}",
           "name": "get_test_results",
           "status": "success",
-          "tool_call_id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa"
+          "tool_call_id": "28c686fa-7344-4fbc-a1db-9795430a05bc"
         },
         "safety_stop": null
       },
@@ -158,12 +158,12 @@
               {
                 "name": "check_release_policy",
                 "args": {
+                  "status": "healthy",
                   "failed_tests": 0,
                   "coverage_pct": 94,
-                  "service": "api",
-                  "status": "healthy"
+                  "service": "api"
                 },
-                "id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239",
+                "id": "a7234f9c-84e8-46c9-ba1a-d66ef1003356",
                 "type": "tool_call"
               }
             ]
@@ -175,17 +175,17 @@
         {
           "name": "check_release_policy",
           "args": {
+            "status": "healthy",
             "failed_tests": 0,
             "coverage_pct": 94,
-            "service": "api",
-            "status": "healthy"
+            "service": "api"
           },
-          "id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239"
+          "id": "a7234f9c-84e8-46c9-ba1a-d66ef1003356"
         }
       ],
-      "timestamp": "2026-11-22T20:43:48.943516+00:00",
-      "duration_ms": 719.0,
-      "elapsed_ms": 1828.0
+      "timestamp": "2026-11-22T21:06:14.687174+00:00",
+      "duration_ms": 734.0,
+      "elapsed_ms": 1891.0
     },
     {
       "step_number": 4,
@@ -200,12 +200,12 @@
             {
               "name": "check_release_policy",
               "args": {
+                "status": "healthy",
                 "failed_tests": 0,
                 "coverage_pct": 94,
-                "service": "api",
-                "status": "healthy"
+                "service": "api"
               },
-              "id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239",
+              "id": "a7234f9c-84e8-46c9-ba1a-d66ef1003356",
               "type": "tool_call"
             }
           ]
@@ -219,7 +219,7 @@
             "content": "{\"service\": \"api\", \"approved\": true, \"reasons\": []}",
             "name": "check_release_policy",
             "status": "success",
-            "tool_call_id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239"
+            "tool_call_id": "a7234f9c-84e8-46c9-ba1a-d66ef1003356"
           }
         ]
       },
@@ -227,17 +227,17 @@
         {
           "name": "check_release_policy",
           "args": {
+            "status": "healthy",
             "failed_tests": 0,
             "coverage_pct": 94,
-            "service": "api",
-            "status": "healthy"
+            "service": "api"
           },
-          "id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239"
+          "id": "a7234f9c-84e8-46c9-ba1a-d66ef1003356"
         }
       ],
-      "timestamp": "2026-11-22T20:43:48.944061+00:00",
+      "timestamp": "2026-11-22T21:06:14.688941+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 1844.0
+      "elapsed_ms": 1891.0
     },
     {
       "step_number": 5,
@@ -250,7 +250,7 @@
           "content": "{\"service\": \"api\", \"approved\": true, \"reasons\": []}",
           "name": "check_release_policy",
           "status": "success",
-          "tool_call_id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239"
+          "tool_call_id": "a7234f9c-84e8-46c9-ba1a-d66ef1003356"
         },
         "safety_stop": null
       },
@@ -258,16 +258,16 @@
         "messages": [
           {
             "type": "ai",
-            "content": "Реліз версії 1.4.0 для сервісу api дозволений. Всі критерії якості відповідають політиці релізів:\n\n- Сервіс здоровий (status: healthy).\n- Немає провалених тестів (failed_tests: 0).\n- Покриття тестами становить 94.0% (coverage_pct: 94.0%), що перевищує 90%.\n\nТаким чином, реліз можна випустити.",
+            "content": "Реліз версії 1.4.0 для сервісу api дозволений. Сервіс здоровий, всі тести пройшли успішно, а покриття тестами перевищує 90%.",
             "tool_calls": []
           }
         ],
         "step_count": 3
       },
       "tool_calls": [],
-      "timestamp": "2026-11-22T20:43:51.206767+00:00",
-      "duration_ms": 2250.0,
-      "elapsed_ms": 4094.0
+      "timestamp": "2026-11-22T21:06:15.630074+00:00",
+      "duration_ms": 937.0,
+      "elapsed_ms": 2828.0
     },
     {
       "step_number": 6,
@@ -277,7 +277,7 @@
         "messages_count": 7,
         "last_message": {
           "type": "ai",
-          "content": "Реліз версії 1.4.0 для сервісу api дозволений. Всі критерії якості відповідають політиці релізів:\n\n- Сервіс здоровий (status: healthy).\n- Немає провалених тестів (failed_tests: 0).\n- Покриття тестами становить 94.0% (coverage_pct: 94.0%), що перевищує 90%.\n\nТаким чином, реліз можна випустити.",
+          "content": "Реліз версії 1.4.0 для сервісу api дозволений. Сервіс здоровий, всі тести пройшли успішно, а покриття тестами перевищує 90%.",
           "tool_calls": []
         },
         "safety_stop": null
@@ -294,9 +294,9 @@
         }
       },
       "tool_calls": [],
-      "timestamp": "2026-11-22T20:43:51.207354+00:00",
+      "timestamp": "2026-11-22T21:06:15.631122+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 4094.0
+      "elapsed_ms": 2828.0
     }
   ]
 }

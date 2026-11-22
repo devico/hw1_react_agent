@@ -3,6 +3,7 @@
 
 import asyncio
 import json
+import re
 import time
 from typing import Annotated, Literal, NotRequired, TypedDict
 
@@ -36,7 +37,6 @@ SYSTEM_PROMPT = """
 Використовуй лише інструменти, потрібні для запиту користувача.
 Стан перевіряй через get_service_status, тести — через get_test_results,
 історію розгортань — через get_deployment_history.
-
 Для рішення про реліз спочатку отримай стан і результати тестів,
 а потім викликай check_release_policy з їхніми фактичними значеннями.
 
@@ -46,7 +46,6 @@ SYSTEM_PROMPT = """
 Аргументи інструментів передавай як значення, а не як JSON Schema:
 правильно: {"service": "api"};
 неправильно: {"service": {"description": "api", "type": "string"}}.
-
 Після помилки валідації самостійно виправ аргументи і повтори
 інструмент; не проси користувача повторно ввести вже наявні дані.
 
@@ -67,7 +66,6 @@ FORMATTER_PROMPT = """
 class AgentState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     step_count: int
-
     final_answer: NotRequired[dict]
     safety_stop: NotRequired[str]
     safety_message: NotRequired[str]
@@ -77,10 +75,7 @@ class AgentState(TypedDict):
 # 3. LLM AND TOOLS
 # ============================================================
 
-llm = ChatOllama(
-    model="qwen2.5:7b-instruct",
-    temperature=0,
-)
+llm = ChatOllama(model="qwen2.5:7b-instruct", temperature=0)
 
 llm_with_tools = llm.bind_tools(TOOLS)
 _default_llm_with_tools = llm_with_tools
@@ -133,6 +128,22 @@ def is_release_decision_query(query: str) -> bool:
         any(word in text for word in release_words)
         and any(word in text for word in decision_words)
     )
+
+
+def requested_version(query: str) -> str | None:
+    """Визначити єдину явно запитану семантичну версію."""
+
+    versions = set(
+        re.findall(
+            r"(?<![\w.])\d+\.\d+\.\d+(?![\w.])",
+            query,
+        )
+    )
+
+    if len(versions) != 1:
+        return None
+
+    return next(iter(versions))
 
 
 def select_tools_for_query(query: str) -> list:
@@ -210,11 +221,7 @@ def select_tools_for_query(query: str) -> list:
 def unresolved_failed_tools(
     state: AgentState,
 ) -> set[str]:
-    """Знайти запитані інструменти без успішного результату.
-
-    Некоректний виклик залишається помилкою, доки LLM
-    не виконає новий виклик із правильними аргументами.
-    """
+    """Знайти інструменти з помилкою без успішного повтору."""
 
     required = {
         tool.name
@@ -254,13 +261,7 @@ def unresolved_failed_tools(
 def should_retry_failed_tools(
     state: AgentState,
 ) -> bool:
-    """Дати LLM обмежену можливість виправити виклик.
-
-    Якщо модель відповідає текстом замість повторного
-    tool call, повертаємо її до вузла agent.
-
-    max_steps і timeout залишаються головними лімітами.
-    """
+    """Дати LLM обмежену можливість виправити tool call."""
 
     failed_names = unresolved_failed_tools(state)
 
@@ -306,7 +307,6 @@ async def agent_node(
 
     try:
         safety.before_agent(completed_steps)
-
     except SafetyStop as error:
         return {
             "safety_stop": error.reason,
@@ -328,6 +328,14 @@ async def agent_node(
         SYSTEM_PROMPT
         + f"\nДозволені інструменти: {allowed_names}."
     )
+
+    version = requested_version(query)
+
+    if version:
+        prompt += (
+            f"\nУ запиті вказано версію {version}. "
+            "Перевір тільки її."
+        )
 
     if not is_release_decision_query(query):
         prompt += (
@@ -411,7 +419,9 @@ def collect_observations(messages: list) -> dict:
 def validate_release_policy_call(
     call: dict,
     observations: dict,
+    query: str = "",
 ) -> str | None:
+    """Перевірити фактичні метрики та версію релізу."""
 
     args = call["args"]
     service = args.get("service")
@@ -437,6 +447,19 @@ def validate_release_policy_call(
             "Потім повтори check_release_policy."
         )
 
+    # Не можна використовувати метрики іншої версії.
+    version = requested_version(query)
+
+    if (
+        version is not None
+        and tests.get("version") != version
+    ):
+        return (
+            f"Некоректна версія тестів: потрібна {version}, "
+            f"отримано {tests.get('version')}. "
+            "Повтори get_test_results для запитаної версії."
+        )
+
     if (
         args.get("status") != status.get("status")
         or args.get("failed_tests") != tests.get("failed")
@@ -460,7 +483,6 @@ async def guarded_tools_node(
     state: AgentState,
     safety: SafetyController,
 ) -> dict:
-
     last_message = state["messages"][-1]
 
     if (
@@ -477,7 +499,6 @@ async def guarded_tools_node(
                 call["name"],
                 call["args"],
             )
-
     except SafetyStop as error:
         return {
             "messages": [
@@ -504,6 +525,8 @@ async def guarded_tools_node(
         state["messages"][:-1]
     )
 
+    expected_version = requested_version(query)
+
     accepted = []
     rejected = {}
 
@@ -520,6 +543,22 @@ async def guarded_tools_node(
                 "для поточного запиту."
             )
 
+        # Відхиляємо неправильну версію до ToolNode.
+        elif (
+            name == "get_test_results"
+            and expected_version is not None
+        ):
+            actual_version = call["args"].get("version")
+
+            if actual_version != expected_version:
+                reason = (
+                    "Некоректна версія тестів: "
+                    f"запитано {expected_version}, "
+                    f"передано {actual_version}. "
+                    "Повтори get_test_results "
+                    f"для версії {expected_version}."
+                )
+
         elif name == "check_release_policy":
             if not is_release_decision_query(query):
                 reason = (
@@ -530,11 +569,11 @@ async def guarded_tools_node(
                 reason = validate_release_policy_call(
                     call,
                     observations,
+                    query,
                 )
 
         if reason is None:
             accepted.append(call)
-
         else:
             rejected[call_id] = ToolMessage(
                 content=reason,
@@ -581,7 +620,6 @@ def build_grounded_release_answer(
     tool_results: list[dict],
     sources: list[str],
 ) -> FinalAnswer | None:
-
     if not is_release_decision_query(query):
         return None
 
@@ -637,6 +675,19 @@ def build_grounded_release_answer(
             "для рішення про реліз."
         )
 
+    # Незалежна перевірка версії перед фінальним рішенням.
+    expected_version = requested_version(query)
+
+    if (
+        expected_version is not None
+        and tests.get("version") != expected_version
+    ):
+        return incomplete(
+            f"Рішення про реліз версії {expected_version} "
+            "не підтверджено: результати тестів "
+            f"належать версії {tests.get('version')}."
+        )
+
     failed = tests.get("failed")
     coverage = tests.get("coverage_pct")
     health = status.get("status")
@@ -680,10 +731,9 @@ def build_grounded_release_answer(
     if approved:
         answer = (
             f"Реліз {service} версії {version} дозволено "
-            f"згідно з демонстраційною політикою. "
+            "згідно з демонстраційною політикою. "
             f"{facts} Усі критерії виконані."
         )
-
     else:
         reasons = "; ".join(
             str(item)
@@ -710,7 +760,6 @@ def build_grounded_information_answer(
     query: str,
     tool_results: list[dict],
 ) -> FinalAnswer | None:
-
     if is_release_decision_query(query):
         return None
 
@@ -722,6 +771,8 @@ def build_grounded_information_answer(
     facts = []
     sources = []
     seen = set()
+
+    expected_version = requested_version(query)
 
     for item in tool_results:
         name = item.get("tool")
@@ -767,6 +818,12 @@ def build_grounded_information_answer(
             if any(
                 data.get(field) is None
                 for field in required
+            ):
+                continue
+
+            if (
+                expected_version is not None
+                and data["version"] != expected_version
             ):
                 continue
 
@@ -837,15 +894,17 @@ def build_grounded_information_answer(
 async def formatter_node(
     state: AgentState,
 ) -> dict:
-
     query = user_query_from_state(state)
 
     agent_answer = ""
     tool_results = []
     actual_sources = []
+    had_tool_messages = False
 
     for message in state["messages"]:
         if isinstance(message, ToolMessage):
+            had_tool_messages = True
+
             if message.status == "error":
                 continue
 
@@ -934,6 +993,24 @@ async def formatter_node(
         }
 
     # --------------------------------------------------------
+    # Tool errors without confirmed evidence
+    # --------------------------------------------------------
+
+    if had_tool_messages and not tool_results:
+        final = FinalAnswer(
+            answer=(
+                "Не вдалося отримати підтверджені дані "
+                "з інструментів. Результат перевірки невідомий."
+            ),
+            confidence=0.0,
+            sources=[],
+        )
+
+        return {
+            "final_answer": final.model_dump()
+        }
+
+    # --------------------------------------------------------
     # Unresolved tool failure
     # --------------------------------------------------------
 
@@ -984,8 +1061,6 @@ async def formatter_node(
         ValueError,
         TypeError,
     ):
-        # Невалідний confidence не виправляємо
-        # автоматично. Повертаємо безпечну відповідь.
         final = FinalAnswer(
             answer=(
                 "Не вдалося сформувати валідну "
@@ -1017,7 +1092,6 @@ async def formatter_node(
 def router(
     state: AgentState,
 ) -> Literal["tools", "agent", "formatter"]:
-
     if state.get("safety_stop"):
         return "formatter"
 
@@ -1029,8 +1103,6 @@ def router(
     ):
         return "tools"
 
-    # Якщо модель відповіла текстом замість
-    # виправлення аргументів, повторюємо agent.
     if should_retry_failed_tools(state):
         return "agent"
 
@@ -1040,7 +1112,6 @@ def router(
 def after_tools(
     state: AgentState,
 ) -> Literal["agent", "formatter"]:
-
     if state.get("safety_stop"):
         return "formatter"
 
@@ -1054,7 +1125,6 @@ def after_tools(
 def message_snapshot(
     message: AnyMessage,
 ) -> dict:
-
     data = {
         "type": message.type,
         "content": message.content,
@@ -1076,7 +1146,6 @@ def message_snapshot(
 def state_snapshot(
     state: AgentState,
 ) -> dict:
-
     messages = state.get("messages", [])
 
     return {
@@ -1096,7 +1165,6 @@ def extract_tool_calls(
     state: AgentState,
     output: dict,
 ) -> list[dict]:
-
     if node_name == "agent":
         messages = output.get(
             "messages",
@@ -1130,7 +1198,6 @@ async def observed_node(
     callback,
     logger: TrajectoryLogger | None,
 ) -> dict:
-
     started = time.monotonic()
 
     try:
@@ -1276,7 +1343,6 @@ async def execute_query(
     timeout_seconds: float = 120.0,
     trajectory_path: str = "trajectory.json",
 ) -> dict:
-
     config = SafetyConfig(
         max_steps=max_steps,
         max_repeats=max_repeats,
@@ -1370,7 +1436,6 @@ def run_query(
     timeout_seconds: float = 120.0,
     trajectory_path: str = "trajectory.json",
 ) -> dict:
-
     result = asyncio.run(
         execute_query(
             query=query,

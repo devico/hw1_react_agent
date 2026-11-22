@@ -17,14 +17,14 @@
         "args": {
           "service": "api"
         },
-        "id": "2ec997a1-5dea-47db-a160-3247a17cb5a3"
+        "id": "fbb747fd-29d6-4fdf-ae89-cea746211f96"
       }
     ],
     "sources": [
       "get_service_status"
     ],
     "confidence": 1.0,
-    "elapsed_ms": 3922.0,
+    "elapsed_ms": 4047.0,
     "max_steps_reached": false,
     "timeout_reached": false,
     "loop_detected": false,
@@ -58,14 +58,14 @@
           "service": "payments",
           "limit": 2
         },
-        "id": "9eeb29df-5657-43da-bd29-d425080bcfce"
+        "id": "56dd0604-7c0a-4c1b-aefc-81a835054017"
       }
     ],
     "sources": [
       "get_deployment_history"
     ],
     "confidence": 1.0,
-    "elapsed_ms": 2062.0,
+    "elapsed_ms": 1969.0,
     "max_steps_reached": false,
     "timeout_reached": false,
     "loop_detected": false,
@@ -99,7 +99,7 @@
         "args": {
           "service": "worker"
         },
-        "id": "41e02bb4-31df-45c4-9a8d-9c59fdd263d8"
+        "id": "6c979bb8-8650-4217-810c-911eb79c044b"
       },
       {
         "name": "get_test_results",
@@ -107,7 +107,7 @@
           "service": "worker",
           "version": "1.2.0"
         },
-        "id": "bea8b123-1720-4fd2-9614-566c6552ad17"
+        "id": "355f8f4c-95d7-4aaa-ab39-817260f5ce11"
       }
     ],
     "sources": [
@@ -115,7 +115,7 @@
       "get_test_results"
     ],
     "confidence": 1.0,
-    "elapsed_ms": 2422.0,
+    "elapsed_ms": 2375.0,
     "max_steps_reached": false,
     "timeout_reached": false,
     "loop_detected": false,
@@ -150,7 +150,7 @@
         "args": {
           "service": "api"
         },
-        "id": "383d4448-b892-4269-8ac6-b1817b2aacc7"
+        "id": "d96ddbca-88a2-4e79-80b7-012c332f352e"
       },
       {
         "name": "get_test_results",
@@ -158,17 +158,17 @@
           "service": "api",
           "version": "1.4.0"
         },
-        "id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa"
+        "id": "28c686fa-7344-4fbc-a1db-9795430a05bc"
       },
       {
         "name": "check_release_policy",
         "args": {
+          "status": "healthy",
           "failed_tests": 0,
           "coverage_pct": 94,
-          "service": "api",
-          "status": "healthy"
+          "service": "api"
         },
-        "id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239"
+        "id": "a7234f9c-84e8-46c9-ba1a-d66ef1003356"
       }
     ],
     "sources": [
@@ -177,7 +177,7 @@
       "check_release_policy"
     ],
     "confidence": 1.0,
-    "elapsed_ms": 4094.0,
+    "elapsed_ms": 2844.0,
     "max_steps_reached": false,
     "timeout_reached": false,
     "loop_detected": false,
@@ -212,7 +212,7 @@
         "args": {
           "service": "payments"
         },
-        "id": "2d2f20b7-821a-4e03-87e5-229030a563ce"
+        "id": "a15b2a15-8ce5-4da7-aa05-3acb241df8bb"
       },
       {
         "name": "get_test_results",
@@ -220,17 +220,17 @@
           "service": "payments",
           "version": "2.1.0"
         },
-        "id": "46cf70db-5c0c-4a4f-adf1-32ce23933714"
+        "id": "654a820a-0859-4fb1-965f-d1268b7cbbe8"
       },
       {
         "name": "check_release_policy",
         "args": {
-          "coverage_pct": 87,
           "service": "payments",
           "status": "degraded",
-          "failed_tests": 4
+          "failed_tests": 4,
+          "coverage_pct": 87
         },
-        "id": "54bd0f6c-724f-467e-8791-f7e1875a3e9b"
+        "id": "a32b244e-483f-42d3-a453-4ce1a8fe3235"
       }
     ],
     "sources": [
@@ -239,7 +239,7 @@
       "check_release_policy"
     ],
     "confidence": 1.0,
-    "elapsed_ms": 4562.0,
+    "elapsed_ms": 4734.0,
     "max_steps_reached": false,
     "timeout_reached": false,
     "loop_detected": false,
