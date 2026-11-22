@@ -1,13 +1,40 @@
 {
   "query": "Покажи два останні розгортання сервісу payments та результат кожного.",
   "total_steps": 4,
-  "total_time_ms": 2172.0,
+  "total_time_ms": 2062.0,
   "trajectory": [
     {
       "step_number": 1,
       "node_name": "agent",
-      "input": "{\"step_count\": 0, \"messages_count\": 1, \"last_message\": {\"type\": \"human\", \"content\": \"Покажи два останні розгортання сервісу payments та результат кожного.\"}, \"safety_stop\": null}",
-      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"\", \"tool_calls\": [{\"name\": \"get_deployment_history\", \"args\": {\"service\": \"payments\", \"limit\": 2}, \"id\": \"a82d197a-f387-4a1e-99b1-7f9b349de964\", \"type\": \"tool_call\"}]}], \"step_count\": 1}",
+      "input": {
+        "step_count": 0,
+        "messages_count": 1,
+        "last_message": {
+          "type": "human",
+          "content": "Покажи два останні розгортання сервісу payments та результат кожного."
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "messages": [
+          {
+            "type": "ai",
+            "content": "",
+            "tool_calls": [
+              {
+                "name": "get_deployment_history",
+                "args": {
+                  "service": "payments",
+                  "limit": 2
+                },
+                "id": "9eeb29df-5657-43da-bd29-d425080bcfce",
+                "type": "tool_call"
+              }
+            ]
+          }
+        ],
+        "step_count": 1
+      },
       "tool_calls": [
         {
           "name": "get_deployment_history",
@@ -15,18 +42,47 @@
             "service": "payments",
             "limit": 2
           },
-          "id": "a82d197a-f387-4a1e-99b1-7f9b349de964"
+          "id": "9eeb29df-5657-43da-bd29-d425080bcfce"
         }
       ],
-      "timestamp": "2026-11-22T18:40:45.890019+00:00",
-      "duration_ms": 687.0,
-      "elapsed_ms": 687.0
+      "timestamp": "2026-11-22T20:43:43.253964+00:00",
+      "duration_ms": 625.0,
+      "elapsed_ms": 640.0
     },
     {
       "step_number": 2,
       "node_name": "tools",
-      "input": "{\"step_count\": 1, \"messages_count\": 2, \"last_message\": {\"type\": \"ai\", \"content\": \"\", \"tool_calls\": [{\"name\": \"get_deployment_history\", \"args\": {\"service\": \"payments\", \"limit\": 2}, \"id\": \"a82d197a-f387-4a1e-99b1-7f9b349de964\", \"type\": \"tool_call\"}]}, \"safety_stop\": null}",
-      "output": "{\"messages\": [{\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"payments\\\", \\\"deployments\\\": [{\\\"version\\\": \\\"2.0.9\\\", \\\"result\\\": \\\"failed\\\"}, {\\\"version\\\": \\\"2.0.8\\\", \\\"result\\\": \\\"success\\\"}]}\", \"name\": \"get_deployment_history\", \"status\": \"success\", \"tool_call_id\": \"a82d197a-f387-4a1e-99b1-7f9b349de964\"}]}",
+      "input": {
+        "step_count": 1,
+        "messages_count": 2,
+        "last_message": {
+          "type": "ai",
+          "content": "",
+          "tool_calls": [
+            {
+              "name": "get_deployment_history",
+              "args": {
+                "service": "payments",
+                "limit": 2
+              },
+              "id": "9eeb29df-5657-43da-bd29-d425080bcfce",
+              "type": "tool_call"
+            }
+          ]
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "messages": [
+          {
+            "type": "tool",
+            "content": "{\"service\": \"payments\", \"deployments\": [{\"version\": \"2.0.9\", \"result\": \"failed\"}, {\"version\": \"2.0.8\", \"result\": \"success\"}]}",
+            "name": "get_deployment_history",
+            "status": "success",
+            "tool_call_id": "9eeb29df-5657-43da-bd29-d425080bcfce"
+          }
+        ]
+      },
       "tool_calls": [
         {
           "name": "get_deployment_history",
@@ -34,32 +90,69 @@
             "service": "payments",
             "limit": 2
           },
-          "id": "a82d197a-f387-4a1e-99b1-7f9b349de964"
+          "id": "9eeb29df-5657-43da-bd29-d425080bcfce"
         }
       ],
-      "timestamp": "2026-11-22T18:40:45.891147+00:00",
+      "timestamp": "2026-11-22T20:43:43.255515+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 687.0
+      "elapsed_ms": 640.0
     },
     {
       "step_number": 3,
       "node_name": "agent",
-      "input": "{\"step_count\": 1, \"messages_count\": 3, \"last_message\": {\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"payments\\\", \\\"deployments\\\": [{\\\"version\\\": \\\"2.0.9\\\", \\\"result\\\": \\\"failed\\\"}, {\\\"version\\\": \\\"2.0.8\\\", \\\"result\\\": \\\"success\\\"}]}\", \"name\": \"get_deployment_history\", \"status\": \"success\", \"tool_call_id\": \"a82d197a-f387-4a1e-99b1-7f9b349de964\"}, \"safety_stop\": null}",
-      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"Ось історія останніх двох розгортань для сервісу payments:\\n\\n1. Розгортання версії 2.0.9 відбувся неуспішно.\\n2. Розгортання версії 2.0.8 відбувся успішно.\", \"tool_calls\": []}], \"step_count\": 2}",
+      "input": {
+        "step_count": 1,
+        "messages_count": 3,
+        "last_message": {
+          "type": "tool",
+          "content": "{\"service\": \"payments\", \"deployments\": [{\"version\": \"2.0.9\", \"result\": \"failed\"}, {\"version\": \"2.0.8\", \"result\": \"success\"}]}",
+          "name": "get_deployment_history",
+          "status": "success",
+          "tool_call_id": "9eeb29df-5657-43da-bd29-d425080bcfce"
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "messages": [
+          {
+            "type": "ai",
+            "content": "Ось історія останніх двох розгортань для сервісу payments:\n\n1. Розгортання версії 2.0.9 відбувся неуспішно.\n2. Розгортання версії 2.0.8 відбувся успішно.",
+            "tool_calls": []
+          }
+        ],
+        "step_count": 2
+      },
       "tool_calls": [],
-      "timestamp": "2026-11-22T18:40:47.367781+00:00",
-      "duration_ms": 1485.0,
-      "elapsed_ms": 2172.0
+      "timestamp": "2026-11-22T20:43:44.673937+00:00",
+      "duration_ms": 1422.0,
+      "elapsed_ms": 2062.0
     },
     {
       "step_number": 4,
       "node_name": "formatter",
-      "input": "{\"step_count\": 2, \"messages_count\": 4, \"last_message\": {\"type\": \"ai\", \"content\": \"Ось історія останніх двох розгортань для сервісу payments:\\n\\n1. Розгортання версії 2.0.9 відбувся неуспішно.\\n2. Розгортання версії 2.0.8 відбувся успішно.\", \"tool_calls\": []}, \"safety_stop\": null}",
-      "output": "{\"final_answer\": {\"answer\": \"Історія розгортань payments: версія 2.0.9 — failed; версія 2.0.8 — success.\", \"confidence\": 1.0, \"sources\": [\"get_deployment_history\"]}}",
+      "input": {
+        "step_count": 2,
+        "messages_count": 4,
+        "last_message": {
+          "type": "ai",
+          "content": "Ось історія останніх двох розгортань для сервісу payments:\n\n1. Розгортання версії 2.0.9 відбувся неуспішно.\n2. Розгортання версії 2.0.8 відбувся успішно.",
+          "tool_calls": []
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "final_answer": {
+          "answer": "Історія розгортань payments: версія 2.0.9 — failed; версія 2.0.8 — success.",
+          "confidence": 1.0,
+          "sources": [
+            "get_deployment_history"
+          ]
+        }
+      },
       "tool_calls": [],
-      "timestamp": "2026-11-22T18:40:47.368321+00:00",
+      "timestamp": "2026-11-22T20:43:44.674454+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 2172.0
+      "elapsed_ms": 2062.0
     }
   ]
 }

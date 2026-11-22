@@ -1,42 +1,62 @@
 
-"""Структуроване JSON-логування траєкторії ReAct-агента."""
+"""Структуроване JSON-логування траєкторії ReAct-агента.
+
+Логер зберігає:
+- повний вхід і вихід кожного вузла;
+- виклики інструментів та їхні аргументи;
+- часові мітки;
+- тривалість виконання вузлів;
+- загальну тривалість роботи агента.
+
+Вкладені словники та списки залишаються JSON-структурами.
+Текст не обрізається.
+"""
 
 import json
 import time
-
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 
 class TrajectoryLogger:
-    """Збирає інформацію про виконання одного запиту агента.
-
-    Зберігає:
-    - номер кроку;
-    - назву вузла LangGraph;
-    - вхідні та вихідні дані;
-    - виклики інструментів;
-    - часові показники.
-    """
+    """Збирає та зберігає структуровану траєкторію агента."""
 
     def __init__(self, query: str):
         self.query = query
-        self.steps: list[dict] = []
+        self.steps: list[dict[str, Any]] = []
         self.started_at = time.monotonic()
 
+    # ========================================================
+    # 1. SERIALIZATION
+    # ========================================================
+
     @staticmethod
-    def serialize(value: Any) -> str:
-        """Перетворити значення на текст для JSON-логу."""
+    def serialize(value: Any) -> Any:
+        """Перетворити значення на JSON-сумісну структуру.
 
-        if isinstance(value, str):
-            return value[:500]
+        Важливо:
+        - рядки зберігаються повністю;
+        - словники залишаються словниками;
+        - списки залишаються списками;
+        - вкладені значення не обрізаються;
+        - Unicode зберігається без ASCII-екранування.
 
-        return json.dumps(
-            value,
-            ensure_ascii=False,
-            default=str,
-        )[:500]
+        Для нестандартних Python-об'єктів використовується
+        рядкове представлення через default=str.
+        """
+
+        return json.loads(
+            json.dumps(
+                value,
+                ensure_ascii=False,
+                default=str,
+            )
+        )
+
+    # ========================================================
+    # 2. RECORD STEP
+    # ========================================================
 
     def log_step(
         self,
@@ -46,41 +66,68 @@ class TrajectoryLogger:
         duration_ms: float,
         tool_calls: list[dict] | None = None,
     ) -> None:
-        """Записати завершений крок виконання графа."""
+        """Записати один завершений крок виконання графа."""
+
+        elapsed_ms = (
+            time.monotonic() - self.started_at
+        ) * 1000
 
         step = {
             "step_number": len(self.steps) + 1,
             "node_name": node_name,
             "input": self.serialize(input_data),
             "output": self.serialize(output_data),
-            "tool_calls": tool_calls or [],
+            "tool_calls": self.serialize(
+                tool_calls if tool_calls is not None else []
+            ),
             "timestamp": datetime.now(
                 timezone.utc
             ).isoformat(),
-            "duration_ms": round(duration_ms, 2),
+            "duration_ms": round(
+                duration_ms,
+                2,
+            ),
             "elapsed_ms": round(
-                (time.monotonic() - self.started_at) * 1000,
+                elapsed_ms,
                 2,
             ),
         }
 
         self.steps.append(step)
 
-    def to_dict(self) -> dict:
+    # ========================================================
+    # 3. BUILD TRAJECTORY
+    # ========================================================
+
+    def to_dict(self) -> dict[str, Any]:
         """Повернути повну траєкторію як словник."""
+
+        total_time_ms = (
+            time.monotonic() - self.started_at
+        ) * 1000
 
         return {
             "query": self.query,
             "total_steps": len(self.steps),
             "total_time_ms": round(
-                (time.monotonic() - self.started_at) * 1000,
+                total_time_ms,
                 2,
             ),
             "trajectory": self.steps,
         }
 
-    def save(self, filepath: str = "trajectory.json") -> None:
-        """Зберегти траєкторію у JSON-файл."""
+    # ========================================================
+    # 4. SAVE JSON
+    # ========================================================
+
+    def save(
+        self,
+        filepath: str | Path = "trajectory.json",
+    ) -> None:
+        """Зберегти траєкторію у файл UTF-8 JSON.
+
+        За потреби автоматично створює директорії.
+        """
 
         path = Path(filepath)
 
@@ -89,9 +136,14 @@ class TrajectoryLogger:
             exist_ok=True,
         )
 
-        with path.open("w", encoding="utf-8") as file:
+        data = self.to_dict()
+
+        with path.open(
+            mode="w",
+            encoding="utf-8",
+        ) as file:
             json.dump(
-                self.to_dict(),
+                data,
                 file,
                 ensure_ascii=False,
                 indent=2,

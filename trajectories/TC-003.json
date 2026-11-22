@@ -1,79 +1,196 @@
 {
   "query": "Перевір стан сервісу worker та результати тестування версії 1.2.0. Повідом статус, кількість провалених тестів і покриття.",
   "total_steps": 4,
-  "total_time_ms": 2406.0,
+  "total_time_ms": 2422.0,
   "trajectory": [
     {
       "step_number": 1,
       "node_name": "agent",
-      "input": "{\"step_count\": 0, \"messages_count\": 1, \"last_message\": {\"type\": \"human\", \"content\": \"Перевір стан сервісу worker та результати тестування версії 1.2.0. Повідом статус, кількість провалених тестів і покриття.\"}, \"safety_stop\": null}",
-      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"\", \"tool_calls\": [{\"name\": \"get_service_status\", \"args\": {\"service\": \"worker\"}, \"id\": \"e7d4cf5a-eea4-4e4a-8ff5-732be26f9a02\", \"type\": \"tool_call\"}, {\"name\": \"get_test_results\", \"args\": {\"version\": \"1.2.0\", \"service\": \"worker\"}, \"id\": \"e2c4b400-3dd4-4aac-8250-648f758ba00a\", \"type\": \"tool_call\"}]}], \"step_count\": 1}",
+      "input": {
+        "step_count": 0,
+        "messages_count": 1,
+        "last_message": {
+          "type": "human",
+          "content": "Перевір стан сервісу worker та результати тестування версії 1.2.0. Повідом статус, кількість провалених тестів і покриття."
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "messages": [
+          {
+            "type": "ai",
+            "content": "",
+            "tool_calls": [
+              {
+                "name": "get_service_status",
+                "args": {
+                  "service": "worker"
+                },
+                "id": "41e02bb4-31df-45c4-9a8d-9c59fdd263d8",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_test_results",
+                "args": {
+                  "service": "worker",
+                  "version": "1.2.0"
+                },
+                "id": "bea8b123-1720-4fd2-9614-566c6552ad17",
+                "type": "tool_call"
+              }
+            ]
+          }
+        ],
+        "step_count": 1
+      },
       "tool_calls": [
         {
           "name": "get_service_status",
           "args": {
             "service": "worker"
           },
-          "id": "e7d4cf5a-eea4-4e4a-8ff5-732be26f9a02"
+          "id": "41e02bb4-31df-45c4-9a8d-9c59fdd263d8"
         },
         {
           "name": "get_test_results",
           "args": {
-            "version": "1.2.0",
-            "service": "worker"
+            "service": "worker",
+            "version": "1.2.0"
           },
-          "id": "e2c4b400-3dd4-4aac-8250-648f758ba00a"
+          "id": "bea8b123-1720-4fd2-9614-566c6552ad17"
         }
       ],
-      "timestamp": "2026-11-22T18:40:48.388814+00:00",
-      "duration_ms": 1015.0,
-      "elapsed_ms": 1015.0
+      "timestamp": "2026-11-22T20:43:45.699982+00:00",
+      "duration_ms": 1016.0,
+      "elapsed_ms": 1016.0
     },
     {
       "step_number": 2,
       "node_name": "tools",
-      "input": "{\"step_count\": 1, \"messages_count\": 2, \"last_message\": {\"type\": \"ai\", \"content\": \"\", \"tool_calls\": [{\"name\": \"get_service_status\", \"args\": {\"service\": \"worker\"}, \"id\": \"e7d4cf5a-eea4-4e4a-8ff5-732be26f9a02\", \"type\": \"tool_call\"}, {\"name\": \"get_test_results\", \"args\": {\"version\": \"1.2.0\", \"service\": \"worker\"}, \"id\": \"e2c4b400-3dd4-4aac-8250-648f758ba00a\", \"type\": \"tool_call\"}]}, \"safety_stop\": null}",
-      "output": "{\"messages\": [{\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"worker\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 90}\", \"name\": \"get_service_status\", \"status\": \"success\", \"tool_call_id\": \"e7d4cf5a-eea4-4e4a-8ff5-732be26f9a02\"}, {\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"worker\\\", \\\"version\\\": \\\"1.2.0\\\", \\\"passed\\\": 75, \\\"failed\\\": 0, \\\"coverage_pct\\\": 92.0}\", \"name\": \"get_test_results\", \"status\": \"success\", \"tool_call_id\": \"e2c4b400-3dd4-4aac-8250-648f758ba00a\"}]}",
+      "input": {
+        "step_count": 1,
+        "messages_count": 2,
+        "last_message": {
+          "type": "ai",
+          "content": "",
+          "tool_calls": [
+            {
+              "name": "get_service_status",
+              "args": {
+                "service": "worker"
+              },
+              "id": "41e02bb4-31df-45c4-9a8d-9c59fdd263d8",
+              "type": "tool_call"
+            },
+            {
+              "name": "get_test_results",
+              "args": {
+                "service": "worker",
+                "version": "1.2.0"
+              },
+              "id": "bea8b123-1720-4fd2-9614-566c6552ad17",
+              "type": "tool_call"
+            }
+          ]
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "messages": [
+          {
+            "type": "tool",
+            "content": "{\"service\": \"worker\", \"status\": \"healthy\", \"latency_ms\": 90}",
+            "name": "get_service_status",
+            "status": "success",
+            "tool_call_id": "41e02bb4-31df-45c4-9a8d-9c59fdd263d8"
+          },
+          {
+            "type": "tool",
+            "content": "{\"service\": \"worker\", \"version\": \"1.2.0\", \"passed\": 75, \"failed\": 0, \"coverage_pct\": 92.0}",
+            "name": "get_test_results",
+            "status": "success",
+            "tool_call_id": "bea8b123-1720-4fd2-9614-566c6552ad17"
+          }
+        ]
+      },
       "tool_calls": [
         {
           "name": "get_service_status",
           "args": {
             "service": "worker"
           },
-          "id": "e7d4cf5a-eea4-4e4a-8ff5-732be26f9a02"
+          "id": "41e02bb4-31df-45c4-9a8d-9c59fdd263d8"
         },
         {
           "name": "get_test_results",
           "args": {
-            "version": "1.2.0",
-            "service": "worker"
+            "service": "worker",
+            "version": "1.2.0"
           },
-          "id": "e2c4b400-3dd4-4aac-8250-648f758ba00a"
+          "id": "bea8b123-1720-4fd2-9614-566c6552ad17"
         }
       ],
-      "timestamp": "2026-11-22T18:40:48.390829+00:00",
+      "timestamp": "2026-11-22T20:43:45.702000+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 1015.0
+      "elapsed_ms": 1016.0
     },
     {
       "step_number": 3,
       "node_name": "agent",
-      "input": "{\"step_count\": 1, \"messages_count\": 4, \"last_message\": {\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"worker\\\", \\\"version\\\": \\\"1.2.0\\\", \\\"passed\\\": 75, \\\"failed\\\": 0, \\\"coverage_pct\\\": 92.0}\", \"name\": \"get_test_results\", \"status\": \"success\", \"tool_call_id\": \"e2c4b400-3dd4-4aac-8250-648f758ba00a\"}, \"safety_stop\": null}",
-      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"Сервіс worker має статус \\\"здоровий\\\" з затримкою 90 мілісекунд. Результати тестування версії 1.2.0 показують, що всі 75 тестів пройшли успішно, покриття коду становить 92.0%.\", \"tool_calls\": []}], \"step_count\": 2}",
+      "input": {
+        "step_count": 1,
+        "messages_count": 4,
+        "last_message": {
+          "type": "tool",
+          "content": "{\"service\": \"worker\", \"version\": \"1.2.0\", \"passed\": 75, \"failed\": 0, \"coverage_pct\": 92.0}",
+          "name": "get_test_results",
+          "status": "success",
+          "tool_call_id": "bea8b123-1720-4fd2-9614-566c6552ad17"
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "messages": [
+          {
+            "type": "ai",
+            "content": "Сервіс worker має статус \"здоровий\" з затримкою 90 мілісекунд. Результати тестування версії 1.2.0 показують, що всі 75 тестів пройшли успішно, покриття коду становить 92.0%.",
+            "tool_calls": []
+          }
+        ],
+        "step_count": 2
+      },
       "tool_calls": [],
-      "timestamp": "2026-11-22T18:40:49.773682+00:00",
-      "duration_ms": 1391.0,
-      "elapsed_ms": 2406.0
+      "timestamp": "2026-11-22T20:43:47.100658+00:00",
+      "duration_ms": 1406.0,
+      "elapsed_ms": 2422.0
     },
     {
       "step_number": 4,
       "node_name": "formatter",
-      "input": "{\"step_count\": 2, \"messages_count\": 5, \"last_message\": {\"type\": \"ai\", \"content\": \"Сервіс worker має статус \\\"здоровий\\\" з затримкою 90 мілісекунд. Результати тестування версії 1.2.0 показують, що всі 75 тестів пройшли успішно, покриття коду становить 92.0%.\", \"tool_calls\": []}, \"safety_stop\": null}",
-      "output": "{\"final_answer\": {\"answer\": \"Сервіс worker: статус healthy. Затримка 90 мс. Результати тестування worker версії 1.2.0: пройдено тестів 75, провалених тестів 0, покриття тестами 92.0%.\", \"confidence\": 1.0, \"sources\": [\"get_service_status\", \"get_test_results\"]}}",
+      "input": {
+        "step_count": 2,
+        "messages_count": 5,
+        "last_message": {
+          "type": "ai",
+          "content": "Сервіс worker має статус \"здоровий\" з затримкою 90 мілісекунд. Результати тестування версії 1.2.0 показують, що всі 75 тестів пройшли успішно, покриття коду становить 92.0%.",
+          "tool_calls": []
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "final_answer": {
+          "answer": "Сервіс worker: статус healthy. Затримка 90 мс. Результати тестування worker версії 1.2.0: пройдено тестів 75, провалених тестів 0, покриття тестами 92.0%.",
+          "confidence": 1.0,
+          "sources": [
+            "get_service_status",
+            "get_test_results"
+          ]
+        }
+      },
       "tool_calls": [],
-      "timestamp": "2026-11-22T18:40:49.774735+00:00",
+      "timestamp": "2026-11-22T20:43:47.101169+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 2406.0
+      "elapsed_ms": 2422.0
     }
   ]
 }

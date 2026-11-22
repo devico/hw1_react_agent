@@ -1,5 +1,5 @@
 
-"""Тести JSON-логування траєкторії ReAct-агента."""
+"""Тести повного структурованого JSON-логування ReAct-агента."""
 
 import asyncio
 import json
@@ -55,23 +55,24 @@ def test_logger_saves_json(tmp_path):
         "get_service_status"
     )
 
-    # Timestamp повинен містити часову зону.
     timestamp = datetime.fromisoformat(step["timestamp"])
     assert timestamp.tzinfo is not None
 
 
 # ============================================================
-# 2. UNICODE AND TRUNCATION
+# 2. FULL TEXT WITHOUT TRUNCATION
 # ============================================================
 
-def test_logger_unicode_and_truncation():
-    """Перевірити кирилицю та обмеження довжини полів."""
+def test_logger_unicode_and_full_text():
+    """Довгий текст і кирилиця зберігаються повністю."""
 
     logger = TrajectoryLogger("Український текст")
 
+    long_text = "А" * 1000
+
     logger.log_step(
         node_name="tools",
-        input_data="А" * 1000,
+        input_data=long_text,
         output_data="Сервіс працює",
         duration_ms=10,
     )
@@ -79,7 +80,10 @@ def test_logger_unicode_and_truncation():
     data = logger.to_dict()
     step = data["trajectory"][0]
 
-    assert len(step["input"]) == 500
+    # Жодного обрізання до 500 символів.
+    assert step["input"] == long_text
+    assert len(step["input"]) == 1000
+
     assert step["output"] == "Сервіс працює"
     assert step["tool_calls"] == []
 
@@ -88,25 +92,79 @@ def test_logger_unicode_and_truncation():
 
 
 # ============================================================
-# 3. DETERMINISTIC TEST LLM
+# 3. STRUCTURED DATA PRESERVATION
+# ============================================================
+
+def test_logger_preserves_nested_json(tmp_path):
+    """Словники та списки зберігаються як JSON-структури."""
+
+    logger = TrajectoryLogger("Структурований лог")
+
+    input_data = {
+        "service": "api",
+        "version": "1.4.0",
+        "metadata": {
+            "description": "Перевірка релізу",
+            "details": "Д" * 1200,
+        },
+    }
+
+    output_data = {
+        "approved": True,
+        "metrics": {
+            "failed_tests": 0,
+            "coverage_pct": 94.0,
+        },
+        "sources": [
+            "get_service_status",
+            "get_test_results",
+            "check_release_policy",
+        ],
+    }
+
+    logger.log_step(
+        node_name="formatter",
+        input_data=input_data,
+        output_data=output_data,
+        duration_ms=25.0,
+    )
+
+    filepath = tmp_path / "nested" / "trajectory.json"
+    logger.save(str(filepath))
+
+    with filepath.open(encoding="utf-8") as file:
+        data = json.load(file)
+
+    step = data["trajectory"][0]
+
+    # Поля мають залишатися об'єктами,
+    # а не JSON-рядками.
+    assert isinstance(step["input"], dict)
+    assert isinstance(step["output"], dict)
+
+    assert step["input"] == input_data
+    assert step["output"] == output_data
+
+    assert len(
+        step["input"]["metadata"]["details"]
+    ) == 1200
+
+    assert step["output"]["metrics"]["coverage_pct"] == 94.0
+
+
+# ============================================================
+# 4. DETERMINISTIC TEST LLM
 # ============================================================
 
 class ScriptedLLM:
-    """Тестова LLM із заздалегідь визначеними діями.
-
-    Дозволяє перевіряти реальний LangGraph
-    без викликів зовнішньої або локальної моделі.
-    """
+    """Тестова модель без звернення до Ollama."""
 
     def __init__(self):
         self.calls = 0
 
     async def ainvoke(self, messages):
-        """Повернути наступну дію тестового агента."""
-
         self.calls += 1
 
-        # Перший виклик: отримуємо статус і тести.
         if self.calls == 1:
             return AIMessage(
                 content="",
@@ -129,7 +187,6 @@ class ScriptedLLM:
                 ],
             )
 
-        # Другий виклик: перевірка політики релізу.
         if self.calls == 2:
             return AIMessage(
                 content="",
@@ -148,25 +205,17 @@ class ScriptedLLM:
                 ],
             )
 
-        # Третій виклик: фінальний висновок.
         return AIMessage(
             content="Перевірку завершено."
         )
 
 
 # ============================================================
-# 4. LANGGRAPH INTEGRATION TEST
+# 5. LANGGRAPH INTEGRATION
 # ============================================================
 
 def test_real_graph_trajectory(monkeypatch, tmp_path):
-    """Перевірити логування реальних вузлів LangGraph.
-
-    Тест використовує:
-    - справжній StateGraph;
-    - справжні інструменти;
-    - справжній ToolNode;
-    - підмінну детерміновану LLM.
-    """
+    """Перевірити логування реальних вузлів LangGraph."""
 
     fake_llm = ScriptedLLM()
 
@@ -186,19 +235,11 @@ def test_real_graph_trajectory(monkeypatch, tmp_path):
         )
     )
 
-    # --------------------------------------------------------
-    # Перевірка створення файлу
-    # --------------------------------------------------------
-
     assert filepath.exists()
     assert fake_llm.calls == 3
 
     with filepath.open(encoding="utf-8") as file:
         data = json.load(file)
-
-    # --------------------------------------------------------
-    # Перевірка послідовності вузлів
-    # --------------------------------------------------------
 
     nodes = [
         step["node_name"]
@@ -216,10 +257,6 @@ def test_real_graph_trajectory(monkeypatch, tmp_path):
 
     assert data["total_steps"] == 6
 
-    # --------------------------------------------------------
-    # Перевірка структури кожного запису
-    # --------------------------------------------------------
-
     required_fields = {
         "step_number",
         "node_name",
@@ -231,10 +268,13 @@ def test_real_graph_trajectory(monkeypatch, tmp_path):
         "elapsed_ms",
     }
 
-    for index, step in enumerate(data["trajectory"], start=1):
+    for index, step in enumerate(
+        data["trajectory"],
+        start=1,
+    ):
         assert required_fields.issubset(step)
-
         assert step["step_number"] == index
+
         assert step["duration_ms"] >= 0
         assert step["elapsed_ms"] >= 0
 
@@ -243,10 +283,6 @@ def test_real_graph_trajectory(monkeypatch, tmp_path):
         )
 
         assert timestamp.tzinfo is not None
-
-    # --------------------------------------------------------
-    # Перевірка фактичних викликів інструментів
-    # --------------------------------------------------------
 
     tool_names = [
         call["name"]
@@ -258,7 +294,6 @@ def test_real_graph_trajectory(monkeypatch, tmp_path):
     assert "get_test_results" in tool_names
     assert "check_release_policy" in tool_names
 
-    # Перевіряємо, що інструменти реально виконалися.
     tool_messages = [
         message
         for message in result["messages"]
@@ -272,20 +307,16 @@ def test_real_graph_trajectory(monkeypatch, tmp_path):
         for message in tool_messages
     )
 
-    # --------------------------------------------------------
-    # Перевірка фінального результату
-    # --------------------------------------------------------
-
     assert result.get("safety_stop") is None
 
-    final_answer = result["final_answer"]
+    final = result["final_answer"]
 
-    assert "дозволено" in final_answer["answer"]
+    assert "дозволено" in final["answer"]
 
-    assert final_answer["sources"] == [
+    assert final["sources"] == [
         "get_service_status",
         "get_test_results",
         "check_release_policy",
     ]
 
-    assert final_answer["confidence"] == 1.0
+    assert final["confidence"] == 1.0

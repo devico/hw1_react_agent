@@ -1,73 +1,302 @@
 {
-  "query": "Перевір стан сервісу api",
-  "total_steps": 5,
-  "total_time_ms": 797.0,
+  "query": "Чи можна випускати реліз api версії 1.4.0? Перевір стан сервісу, результати тестів та політику релізу.",
+  "total_steps": 6,
+  "total_time_ms": 4094.0,
   "trajectory": [
     {
       "step_number": 1,
       "node_name": "agent",
-      "input": "{\"step_count\": 0, \"messages_count\": 1, \"last_message\": {\"type\": \"human\", \"content\": \"Перевір стан сервісу api\"}, \"safety_stop\": null}",
-      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"\", \"tool_calls\": [{\"name\": \"get_service_status\", \"args\": {\"service\": \"api\"}, \"id\": \"first-status\", \"type\": \"tool_call\"}]}], \"step_count\": 1}",
+      "input": {
+        "step_count": 0,
+        "messages_count": 1,
+        "last_message": {
+          "type": "human",
+          "content": "Чи можна випускати реліз api версії 1.4.0? Перевір стан сервісу, результати тестів та політику релізу."
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "messages": [
+          {
+            "type": "ai",
+            "content": "",
+            "tool_calls": [
+              {
+                "name": "get_service_status",
+                "args": {
+                  "service": "api"
+                },
+                "id": "383d4448-b892-4269-8ac6-b1817b2aacc7",
+                "type": "tool_call"
+              },
+              {
+                "name": "get_test_results",
+                "args": {
+                  "service": "api",
+                  "version": "1.4.0"
+                },
+                "id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa",
+                "type": "tool_call"
+              }
+            ]
+          }
+        ],
+        "step_count": 1
+      },
       "tool_calls": [
         {
           "name": "get_service_status",
           "args": {
             "service": "api"
           },
-          "id": "first-status"
+          "id": "383d4448-b892-4269-8ac6-b1817b2aacc7"
+        },
+        {
+          "name": "get_test_results",
+          "args": {
+            "service": "api",
+            "version": "1.4.0"
+          },
+          "id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa"
         }
       ],
-      "timestamp": "2026-11-22T18:44:24.502999+00:00",
-      "duration_ms": 0.0,
-      "elapsed_ms": 0.0
+      "timestamp": "2026-11-22T20:43:48.208937+00:00",
+      "duration_ms": 1094.0,
+      "elapsed_ms": 1094.0
     },
     {
       "step_number": 2,
       "node_name": "tools",
-      "input": "{\"step_count\": 1, \"messages_count\": 2, \"last_message\": {\"type\": \"ai\", \"content\": \"\", \"tool_calls\": [{\"name\": \"get_service_status\", \"args\": {\"service\": \"api\"}, \"id\": \"first-status\", \"type\": \"tool_call\"}]}, \"safety_stop\": null}",
-      "output": "{\"messages\": [{\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 120}\", \"name\": \"get_service_status\", \"status\": \"success\", \"tool_call_id\": \"first-status\"}]}",
+      "input": {
+        "step_count": 1,
+        "messages_count": 2,
+        "last_message": {
+          "type": "ai",
+          "content": "",
+          "tool_calls": [
+            {
+              "name": "get_service_status",
+              "args": {
+                "service": "api"
+              },
+              "id": "383d4448-b892-4269-8ac6-b1817b2aacc7",
+              "type": "tool_call"
+            },
+            {
+              "name": "get_test_results",
+              "args": {
+                "service": "api",
+                "version": "1.4.0"
+              },
+              "id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa",
+              "type": "tool_call"
+            }
+          ]
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "messages": [
+          {
+            "type": "tool",
+            "content": "{\"service\": \"api\", \"status\": \"healthy\", \"latency_ms\": 120}",
+            "name": "get_service_status",
+            "status": "success",
+            "tool_call_id": "383d4448-b892-4269-8ac6-b1817b2aacc7"
+          },
+          {
+            "type": "tool",
+            "content": "{\"service\": \"api\", \"version\": \"1.4.0\", \"passed\": 120, \"failed\": 0, \"coverage_pct\": 94.0}",
+            "name": "get_test_results",
+            "status": "success",
+            "tool_call_id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa"
+          }
+        ]
+      },
       "tool_calls": [
         {
           "name": "get_service_status",
           "args": {
             "service": "api"
           },
-          "id": "first-status"
+          "id": "383d4448-b892-4269-8ac6-b1817b2aacc7"
+        },
+        {
+          "name": "get_test_results",
+          "args": {
+            "service": "api",
+            "version": "1.4.0"
+          },
+          "id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa"
         }
       ],
-      "timestamp": "2026-11-22T18:44:24.504287+00:00",
+      "timestamp": "2026-11-22T20:43:48.210646+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 15.0
+      "elapsed_ms": 1109.0
     },
     {
       "step_number": 3,
       "node_name": "agent",
-      "input": "{\"step_count\": 1, \"messages_count\": 3, \"last_message\": {\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 120}\", \"name\": \"get_service_status\", \"status\": \"success\", \"tool_call_id\": \"first-status\"}, \"safety_stop\": null}",
-      "output": "{\"error_type\": \"CancelledError\", \"message\": \"\", \"cancelled\": true}",
-      "tool_calls": [],
-      "timestamp": "2026-11-22T18:44:25.290616+00:00",
-      "duration_ms": 782.0,
-      "elapsed_ms": 797.0
+      "input": {
+        "step_count": 1,
+        "messages_count": 4,
+        "last_message": {
+          "type": "tool",
+          "content": "{\"service\": \"api\", \"version\": \"1.4.0\", \"passed\": 120, \"failed\": 0, \"coverage_pct\": 94.0}",
+          "name": "get_test_results",
+          "status": "success",
+          "tool_call_id": "921c6de9-dbe6-4c7a-9829-18f8c26544aa"
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "messages": [
+          {
+            "type": "ai",
+            "content": "",
+            "tool_calls": [
+              {
+                "name": "check_release_policy",
+                "args": {
+                  "failed_tests": 0,
+                  "coverage_pct": 94,
+                  "service": "api",
+                  "status": "healthy"
+                },
+                "id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239",
+                "type": "tool_call"
+              }
+            ]
+          }
+        ],
+        "step_count": 2
+      },
+      "tool_calls": [
+        {
+          "name": "check_release_policy",
+          "args": {
+            "failed_tests": 0,
+            "coverage_pct": 94,
+            "service": "api",
+            "status": "healthy"
+          },
+          "id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239"
+        }
+      ],
+      "timestamp": "2026-11-22T20:43:48.943516+00:00",
+      "duration_ms": 719.0,
+      "elapsed_ms": 1828.0
     },
     {
       "step_number": 4,
-      "node_name": "safety",
-      "input": "{\"timeout_seconds\": 0.8}",
-      "output": "{\"reason\": \"timeout\"}",
-      "tool_calls": [],
-      "timestamp": "2026-11-22T18:44:25.290616+00:00",
+      "node_name": "tools",
+      "input": {
+        "step_count": 2,
+        "messages_count": 5,
+        "last_message": {
+          "type": "ai",
+          "content": "",
+          "tool_calls": [
+            {
+              "name": "check_release_policy",
+              "args": {
+                "failed_tests": 0,
+                "coverage_pct": 94,
+                "service": "api",
+                "status": "healthy"
+              },
+              "id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239",
+              "type": "tool_call"
+            }
+          ]
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "messages": [
+          {
+            "type": "tool",
+            "content": "{\"service\": \"api\", \"approved\": true, \"reasons\": []}",
+            "name": "check_release_policy",
+            "status": "success",
+            "tool_call_id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239"
+          }
+        ]
+      },
+      "tool_calls": [
+        {
+          "name": "check_release_policy",
+          "args": {
+            "failed_tests": 0,
+            "coverage_pct": 94,
+            "service": "api",
+            "status": "healthy"
+          },
+          "id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239"
+        }
+      ],
+      "timestamp": "2026-11-22T20:43:48.944061+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 797.0
+      "elapsed_ms": 1844.0
     },
     {
       "step_number": 5,
-      "node_name": "formatter",
-      "input": "{\"step_count\": 1, \"messages_count\": 3, \"last_message\": {\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 120}\", \"name\": \"get_service_status\", \"status\": \"success\", \"tool_call_id\": \"first-status\"}, \"safety_stop\": \"timeout\"}",
-      "output": "{\"final_answer\": {\"answer\": \"Виконання зупинено: Перевищено загальний timeout (0.8 с) Отримані дані: [{\\\"tool\\\": \\\"get_service_status\\\", \\\"result\\\": {\\\"service\\\": \\\"api\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 120}}]. Остаточний висновок не сформовано.\", \"confidence\": 0.0, \"sources\": [\"get_service_status\"]}}",
+      "node_name": "agent",
+      "input": {
+        "step_count": 2,
+        "messages_count": 6,
+        "last_message": {
+          "type": "tool",
+          "content": "{\"service\": \"api\", \"approved\": true, \"reasons\": []}",
+          "name": "check_release_policy",
+          "status": "success",
+          "tool_call_id": "e14ef45f-e2a9-4df5-aeec-cd741c3ec239"
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "messages": [
+          {
+            "type": "ai",
+            "content": "Реліз версії 1.4.0 для сервісу api дозволений. Всі критерії якості відповідають політиці релізів:\n\n- Сервіс здоровий (status: healthy).\n- Немає провалених тестів (failed_tests: 0).\n- Покриття тестами становить 94.0% (coverage_pct: 94.0%), що перевищує 90%.\n\nТаким чином, реліз можна випустити.",
+            "tool_calls": []
+          }
+        ],
+        "step_count": 3
+      },
       "tool_calls": [],
-      "timestamp": "2026-11-22T18:44:25.290616+00:00",
+      "timestamp": "2026-11-22T20:43:51.206767+00:00",
+      "duration_ms": 2250.0,
+      "elapsed_ms": 4094.0
+    },
+    {
+      "step_number": 6,
+      "node_name": "formatter",
+      "input": {
+        "step_count": 3,
+        "messages_count": 7,
+        "last_message": {
+          "type": "ai",
+          "content": "Реліз версії 1.4.0 для сервісу api дозволений. Всі критерії якості відповідають політиці релізів:\n\n- Сервіс здоровий (status: healthy).\n- Немає провалених тестів (failed_tests: 0).\n- Покриття тестами становить 94.0% (coverage_pct: 94.0%), що перевищує 90%.\n\nТаким чином, реліз можна випустити.",
+          "tool_calls": []
+        },
+        "safety_stop": null
+      },
+      "output": {
+        "final_answer": {
+          "answer": "Реліз api версії 1.4.0 дозволено згідно з демонстраційною політикою. Сервіс api: статус healthy, провалених тестів 0, покриття тестами 94.0%. Усі критерії виконані.",
+          "confidence": 1.0,
+          "sources": [
+            "get_service_status",
+            "get_test_results",
+            "check_release_policy"
+          ]
+        }
+      },
+      "tool_calls": [],
+      "timestamp": "2026-11-22T20:43:51.207354+00:00",
       "duration_ms": 0.0,
-      "elapsed_ms": 797.0
+      "elapsed_ms": 4094.0
     }
   ]
 }
