@@ -1,0 +1,65 @@
+{
+  "query": "Покажи два останні розгортання сервісу payments та результат кожного.",
+  "total_steps": 4,
+  "total_time_ms": 4875.0,
+  "trajectory": [
+    {
+      "step_number": 1,
+      "node_name": "agent",
+      "input": "{\"step_count\": 0, \"messages_count\": 1, \"last_message\": {\"type\": \"human\", \"content\": \"Покажи два останні розгортання сервісу payments та результат кожного.\"}, \"safety_stop\": null}",
+      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"\", \"tool_calls\": [{\"name\": \"get_deployment_history\", \"args\": {\"service\": \"payments\", \"limit\": 2}, \"id\": \"8996b58f-5e60-40c6-9bf4-d4267a554f3c\", \"type\": \"tool_call\"}]}], \"step_count\": 1}",
+      "tool_calls": [
+        {
+          "name": "get_deployment_history",
+          "args": {
+            "service": "payments",
+            "limit": 2
+          },
+          "id": "8996b58f-5e60-40c6-9bf4-d4267a554f3c"
+        }
+      ],
+      "timestamp": "2026-11-22T16:57:22.506453+00:00",
+      "duration_ms": 515.0,
+      "elapsed_ms": 515.0
+    },
+    {
+      "step_number": 2,
+      "node_name": "tools",
+      "input": "{\"step_count\": 1, \"messages_count\": 2, \"last_message\": {\"type\": \"ai\", \"content\": \"\", \"tool_calls\": [{\"name\": \"get_deployment_history\", \"args\": {\"service\": \"payments\", \"limit\": 2}, \"id\": \"8996b58f-5e60-40c6-9bf4-d4267a554f3c\", \"type\": \"tool_call\"}]}, \"safety_stop\": null}",
+      "output": "{\"messages\": [{\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"payments\\\", \\\"deployments\\\": [{\\\"version\\\": \\\"2.0.9\\\", \\\"result\\\": \\\"failed\\\"}, {\\\"version\\\": \\\"2.0.8\\\", \\\"result\\\": \\\"success\\\"}]}\", \"name\": \"get_deployment_history\", \"status\": \"success\", \"tool_call_id\": \"8996b58f-5e60-40c6-9bf4-d4267a554f3c\"}]}",
+      "tool_calls": [
+        {
+          "name": "get_deployment_history",
+          "args": {
+            "service": "payments",
+            "limit": 2
+          },
+          "id": "8996b58f-5e60-40c6-9bf4-d4267a554f3c"
+        }
+      ],
+      "timestamp": "2026-11-22T16:57:22.507451+00:00",
+      "duration_ms": 0.0,
+      "elapsed_ms": 515.0
+    },
+    {
+      "step_number": 3,
+      "node_name": "agent",
+      "input": "{\"step_count\": 1, \"messages_count\": 3, \"last_message\": {\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"payments\\\", \\\"deployments\\\": [{\\\"version\\\": \\\"2.0.9\\\", \\\"result\\\": \\\"failed\\\"}, {\\\"version\\\": \\\"2.0.8\\\", \\\"result\\\": \\\"success\\\"}]}\", \"name\": \"get_deployment_history\", \"status\": \"success\", \"tool_call_id\": \"8996b58f-5e60-40c6-9bf4-d4267a554f3c\"}, \"safety_stop\": null}",
+      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"Ось історія останніх двох розгортань для сервісу payments:\\n\\n1. Версія 2.0.9: Розгортання не успішне.\\n2. Версія 2.0.8: Розгортання успішне.\\n\\nДля подальшого аналізу, можемо перевірити результати тестування цих версій. Давайте спочатку перевіримо стан сервісу payments.\", \"tool_calls\": []}], \"step_count\": 2}",
+      "tool_calls": [],
+      "timestamp": "2026-11-22T16:57:24.514010+00:00",
+      "duration_ms": 2000.0,
+      "elapsed_ms": 2515.0
+    },
+    {
+      "step_number": 4,
+      "node_name": "formatter",
+      "input": "{\"step_count\": 2, \"messages_count\": 4, \"last_message\": {\"type\": \"ai\", \"content\": \"Ось історія останніх двох розгортань для сервісу payments:\\n\\n1. Версія 2.0.9: Розгортання не успішне.\\n2. Версія 2.0.8: Розгортання успішне.\\n\\nДля подальшого аналізу, можемо перевірити результати тестування цих версій. Давайте спочатку перевіримо стан сервісу payments.\", \"tool_calls\": []}, \"safety_stop\": null}",
+      "output": "{\"final_answer\": {\"answer\": \"Ось історія останніх двох розгортань для сервісу payments:\\n\\n1. Версія 2.0.9: Розгортання не успішне.\\n2. Версія 2.0.8: Розгортання успішне.\\n\\nДля подальшого аналізу, можемо перевірити результати тестування цих версій.\", \"confidence\": 1.0, \"sources\": [\"get_deployment_history\"]}, \"step_count\": 3}",
+      "tool_calls": [],
+      "timestamp": "2026-11-22T16:57:26.863909+00:00",
+      "duration_ms": 2360.0,
+      "elapsed_ms": 4875.0
+    }
+  ]
+}

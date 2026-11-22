@@ -1,0 +1,213 @@
+{
+  "query": "Чи можна випускати реліз api версії 1.4.0? Перевір стан сервісу, результати тестів та політику релізу.",
+  "total_steps": 8,
+  "total_time_ms": 6344.0,
+  "trajectory": [
+    {
+      "step_number": 1,
+      "node_name": "agent",
+      "input": "{\"step_count\": 0, \"messages_count\": 1, \"last_message\": {\"type\": \"human\", \"content\": \"Чи можна випускати реліз api версії 1.4.0? Перевір стан сервісу, результати тестів та політику релізу.\"}, \"safety_stop\": null}",
+      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"\", \"tool_calls\": [{\"name\": \"get_service_status\", \"args\": {\"service\": \"api\"}, \"id\": \"3b49f0dc-c595-4f6b-bd9d-79814325f019\", \"type\": \"tool_call\"}, {\"name\": \"get_test_results\", \"args\": {\"service\": \"api\", \"version\": \"1.4.0\"}, \"id\": \"e66252d0-6d35-4c1d-8806-3764ffdb5ec8\", \"type\": \"tool_call\"}, {\"name\": \"check_release_policy\", \"args\": {\"failed_tests\": 0, \"coverage_pct\": 0, \"service\": \"api\", \"status\": \"\"}, \"id\": \"90892cb7-5956-480c-b2a7-2d3f80ff92f8\", \"type\": \"t",
+      "tool_calls": [
+        {
+          "name": "get_service_status",
+          "args": {
+            "service": "api"
+          },
+          "id": "3b49f0dc-c595-4f6b-bd9d-79814325f019"
+        },
+        {
+          "name": "get_test_results",
+          "args": {
+            "service": "api",
+            "version": "1.4.0"
+          },
+          "id": "e66252d0-6d35-4c1d-8806-3764ffdb5ec8"
+        },
+        {
+          "name": "check_release_policy",
+          "args": {
+            "failed_tests": 0,
+            "coverage_pct": 0,
+            "service": "api",
+            "status": ""
+          },
+          "id": "90892cb7-5956-480c-b2a7-2d3f80ff92f8"
+        }
+      ],
+      "timestamp": "2026-11-22T16:57:36.394930+00:00",
+      "duration_ms": 1469.0,
+      "elapsed_ms": 1469.0
+    },
+    {
+      "step_number": 2,
+      "node_name": "tools",
+      "input": "{\"step_count\": 1, \"messages_count\": 2, \"last_message\": {\"type\": \"ai\", \"content\": \"\", \"tool_calls\": [{\"name\": \"get_service_status\", \"args\": {\"service\": \"api\"}, \"id\": \"3b49f0dc-c595-4f6b-bd9d-79814325f019\", \"type\": \"tool_call\"}, {\"name\": \"get_test_results\", \"args\": {\"service\": \"api\", \"version\": \"1.4.0\"}, \"id\": \"e66252d0-6d35-4c1d-8806-3764ffdb5ec8\", \"type\": \"tool_call\"}, {\"name\": \"check_release_policy\", \"args\": {\"failed_tests\": 0, \"coverage_pct\": 0, \"service\": \"api\", \"status\": \"\"}, \"id\": \"90892cb7",
+      "output": "{\"messages\": [{\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 120}\", \"name\": \"get_service_status\", \"status\": \"success\", \"tool_call_id\": \"3b49f0dc-c595-4f6b-bd9d-79814325f019\"}, {\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"version\\\": \\\"1.4.0\\\", \\\"passed\\\": 120, \\\"failed\\\": 0, \\\"coverage_pct\\\": 94.0}\", \"name\": \"get_test_results\", \"status\": \"success\", \"tool_call_id\": \"e66252d0-6d35-4c1d-8806-3764ffdb5ec8\"}, {\"type\": \"tool\", \"content\": \"Помилка з",
+      "tool_calls": [
+        {
+          "name": "get_service_status",
+          "args": {
+            "service": "api"
+          },
+          "id": "3b49f0dc-c595-4f6b-bd9d-79814325f019"
+        },
+        {
+          "name": "get_test_results",
+          "args": {
+            "service": "api",
+            "version": "1.4.0"
+          },
+          "id": "e66252d0-6d35-4c1d-8806-3764ffdb5ec8"
+        },
+        {
+          "name": "check_release_policy",
+          "args": {
+            "failed_tests": 0,
+            "coverage_pct": 0,
+            "service": "api",
+            "status": ""
+          },
+          "id": "90892cb7-5956-480c-b2a7-2d3f80ff92f8"
+        }
+      ],
+      "timestamp": "2026-11-22T16:57:36.395485+00:00",
+      "duration_ms": 0.0,
+      "elapsed_ms": 1469.0
+    },
+    {
+      "step_number": 3,
+      "node_name": "agent",
+      "input": "{\"step_count\": 1, \"messages_count\": 5, \"last_message\": {\"type\": \"tool\", \"content\": \"Помилка залежностей. Спочатку отримай get_service_status та get_test_results. Потім повтори check_release_policy.\", \"name\": \"check_release_policy\", \"status\": \"error\", \"tool_call_id\": \"90892cb7-5956-480c-b2a7-2d3f80ff92f8\"}, \"safety_stop\": null}",
+      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"Дякую за увагу. Давайте спочатку знову перевіримо стан сервісу та результати тестування.\\n\\n\", \"tool_calls\": [{\"name\": \"get_service_status\", \"args\": {\"service\": \"api\"}, \"id\": \"d82ccd54-8479-4481-af4c-f65369b4423a\", \"type\": \"tool_call\"}, {\"name\": \"get_test_results\", \"args\": {\"service\": \"api\", \"version\": \"1.4.0\"}, \"id\": \"89a224ab-7150-47d4-a6c4-885a227b0457\", \"type\": \"tool_call\"}, {\"name\": \"check_release_policy\", \"args\": {\"failed_tests\": 0, \"service\": \"api\"",
+      "tool_calls": [
+        {
+          "name": "get_service_status",
+          "args": {
+            "service": "api"
+          },
+          "id": "d82ccd54-8479-4481-af4c-f65369b4423a"
+        },
+        {
+          "name": "get_test_results",
+          "args": {
+            "service": "api",
+            "version": "1.4.0"
+          },
+          "id": "89a224ab-7150-47d4-a6c4-885a227b0457"
+        },
+        {
+          "name": "check_release_policy",
+          "args": {
+            "failed_tests": 0,
+            "service": "api",
+            "status": "",
+            "coverage_pct": 0
+          },
+          "id": "d2ad4072-40dc-4ffa-a53b-849d5acc30c8"
+        }
+      ],
+      "timestamp": "2026-11-22T16:57:38.226807+00:00",
+      "duration_ms": 1828.0,
+      "elapsed_ms": 3297.0
+    },
+    {
+      "step_number": 4,
+      "node_name": "tools",
+      "input": "{\"step_count\": 2, \"messages_count\": 6, \"last_message\": {\"type\": \"ai\", \"content\": \"Дякую за увагу. Давайте спочатку знову перевіримо стан сервісу та результати тестування.\\n\\n\", \"tool_calls\": [{\"name\": \"get_service_status\", \"args\": {\"service\": \"api\"}, \"id\": \"d82ccd54-8479-4481-af4c-f65369b4423a\", \"type\": \"tool_call\"}, {\"name\": \"get_test_results\", \"args\": {\"service\": \"api\", \"version\": \"1.4.0\"}, \"id\": \"89a224ab-7150-47d4-a6c4-885a227b0457\", \"type\": \"tool_call\"}, {\"name\": \"check_release_policy\", \"ar",
+      "output": "{\"messages\": [{\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 120}\", \"name\": \"get_service_status\", \"status\": \"success\", \"tool_call_id\": \"d82ccd54-8479-4481-af4c-f65369b4423a\"}, {\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"version\\\": \\\"1.4.0\\\", \\\"passed\\\": 120, \\\"failed\\\": 0, \\\"coverage_pct\\\": 94.0}\", \"name\": \"get_test_results\", \"status\": \"success\", \"tool_call_id\": \"89a224ab-7150-47d4-a6c4-885a227b0457\"}, {\"type\": \"tool\", \"content\": \"Некоректн",
+      "tool_calls": [
+        {
+          "name": "get_service_status",
+          "args": {
+            "service": "api"
+          },
+          "id": "d82ccd54-8479-4481-af4c-f65369b4423a"
+        },
+        {
+          "name": "get_test_results",
+          "args": {
+            "service": "api",
+            "version": "1.4.0"
+          },
+          "id": "89a224ab-7150-47d4-a6c4-885a227b0457"
+        },
+        {
+          "name": "check_release_policy",
+          "args": {
+            "failed_tests": 0,
+            "service": "api",
+            "status": "",
+            "coverage_pct": 0
+          },
+          "id": "d2ad4072-40dc-4ffa-a53b-849d5acc30c8"
+        }
+      ],
+      "timestamp": "2026-11-22T16:57:38.228457+00:00",
+      "duration_ms": 0.0,
+      "elapsed_ms": 3297.0
+    },
+    {
+      "step_number": 5,
+      "node_name": "agent",
+      "input": "{\"step_count\": 2, \"messages_count\": 9, \"last_message\": {\"type\": \"tool\", \"content\": \"Некоректні аргументи release policy. Використай status=healthy, failed_tests=0, coverage_pct=94.0.\", \"name\": \"check_release_policy\", \"status\": \"error\", \"tool_call_id\": \"d2ad4072-40dc-4ffa-a53b-849d5acc30c8\"}, \"safety_stop\": null}",
+      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"Добре, тепер ми маємо всі необхідні дані. Давайте перевіримо політику релізу.\\n\\n\", \"tool_calls\": [{\"name\": \"check_release_policy\", \"args\": {\"coverage_pct\": 94, \"failed_tests\": 0, \"service\": \"api\", \"status\": \"healthy\"}, \"id\": \"d1e37089-f332-483f-9227-ccc3b9ebd9e6\", \"type\": \"tool_call\"}]}], \"step_count\": 3}",
+      "tool_calls": [
+        {
+          "name": "check_release_policy",
+          "args": {
+            "coverage_pct": 94,
+            "failed_tests": 0,
+            "service": "api",
+            "status": "healthy"
+          },
+          "id": "d1e37089-f332-483f-9227-ccc3b9ebd9e6"
+        }
+      ],
+      "timestamp": "2026-11-22T16:57:39.609417+00:00",
+      "duration_ms": 1375.0,
+      "elapsed_ms": 4672.0
+    },
+    {
+      "step_number": 6,
+      "node_name": "tools",
+      "input": "{\"step_count\": 3, \"messages_count\": 10, \"last_message\": {\"type\": \"ai\", \"content\": \"Добре, тепер ми маємо всі необхідні дані. Давайте перевіримо політику релізу.\\n\\n\", \"tool_calls\": [{\"name\": \"check_release_policy\", \"args\": {\"coverage_pct\": 94, \"failed_tests\": 0, \"service\": \"api\", \"status\": \"healthy\"}, \"id\": \"d1e37089-f332-483f-9227-ccc3b9ebd9e6\", \"type\": \"tool_call\"}]}, \"safety_stop\": null}",
+      "output": "{\"messages\": [{\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"approved\\\": true, \\\"reasons\\\": []}\", \"name\": \"check_release_policy\", \"status\": \"success\", \"tool_call_id\": \"d1e37089-f332-483f-9227-ccc3b9ebd9e6\"}]}",
+      "tool_calls": [
+        {
+          "name": "check_release_policy",
+          "args": {
+            "coverage_pct": 94,
+            "failed_tests": 0,
+            "service": "api",
+            "status": "healthy"
+          },
+          "id": "d1e37089-f332-483f-9227-ccc3b9ebd9e6"
+        }
+      ],
+      "timestamp": "2026-11-22T16:57:39.609417+00:00",
+      "duration_ms": 0.0,
+      "elapsed_ms": 4672.0
+    },
+    {
+      "step_number": 7,
+      "node_name": "agent",
+      "input": "{\"step_count\": 3, \"messages_count\": 11, \"last_message\": {\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"approved\\\": true, \\\"reasons\\\": []}\", \"name\": \"check_release_policy\", \"status\": \"success\", \"tool_call_id\": \"d1e37089-f332-483f-9227-ccc3b9ebd9e6\"}, \"safety_stop\": null}",
+      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"Реліз API версії 1.4.0 можна випустити. Стан сервісу healthy, кількість провалених тестів 0, покриття тестами 94.0%, що відповідає політиці релізів. Реліз був підтверджений без підстав для звернення.\", \"tool_calls\": []}], \"step_count\": 4}",
+      "tool_calls": [],
+      "timestamp": "2026-11-22T16:57:41.273085+00:00",
+      "duration_ms": 1672.0,
+      "elapsed_ms": 6344.0
+    },
+    {
+      "step_number": 8,
+      "node_name": "formatter",
+      "input": "{\"step_count\": 4, \"messages_count\": 12, \"last_message\": {\"type\": \"ai\", \"content\": \"Реліз API версії 1.4.0 можна випустити. Стан сервісу healthy, кількість провалених тестів 0, покриття тестами 94.0%, що відповідає політиці релізів. Реліз був підтверджений без підстав для звернення.\", \"tool_calls\": []}, \"safety_stop\": null}",
+      "output": "{\"final_answer\": {\"answer\": \"Реліз api версії 1.4.0 дозволено згідно з демонстраційною політикою. Сервіс api: статус healthy, провалених тестів 0, покриття тестами 94.0%. Усі критерії виконані.\", \"confidence\": 1.0, \"sources\": [\"get_service_status\", \"get_test_results\", \"check_release_policy\"]}}",
+      "tool_calls": [],
+      "timestamp": "2026-11-22T16:57:41.273735+00:00",
+      "duration_ms": 0.0,
+      "elapsed_ms": 6344.0
+    }
+  ]
+}

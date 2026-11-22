@@ -1,0 +1,63 @@
+{
+  "query": "Перевір поточний стан сервісу api.",
+  "total_steps": 4,
+  "total_time_ms": 5938.0,
+  "trajectory": [
+    {
+      "step_number": 1,
+      "node_name": "agent",
+      "input": "{\"step_count\": 0, \"messages_count\": 1, \"last_message\": {\"type\": \"human\", \"content\": \"Перевір поточний стан сервісу api.\"}, \"safety_stop\": null}",
+      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"\", \"tool_calls\": [{\"name\": \"get_service_status\", \"args\": {\"service\": \"api\"}, \"id\": \"7b9ffd03-579f-43d1-a21e-f46dc0145239\", \"type\": \"tool_call\"}]}], \"step_count\": 1}",
+      "tool_calls": [
+        {
+          "name": "get_service_status",
+          "args": {
+            "service": "api"
+          },
+          "id": "7b9ffd03-579f-43d1-a21e-f46dc0145239"
+        }
+      ],
+      "timestamp": "2026-11-22T16:57:19.345379+00:00",
+      "duration_ms": 3281.0,
+      "elapsed_ms": 3281.0
+    },
+    {
+      "step_number": 2,
+      "node_name": "tools",
+      "input": "{\"step_count\": 1, \"messages_count\": 2, \"last_message\": {\"type\": \"ai\", \"content\": \"\", \"tool_calls\": [{\"name\": \"get_service_status\", \"args\": {\"service\": \"api\"}, \"id\": \"7b9ffd03-579f-43d1-a21e-f46dc0145239\", \"type\": \"tool_call\"}]}, \"safety_stop\": null}",
+      "output": "{\"messages\": [{\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 120}\", \"name\": \"get_service_status\", \"status\": \"success\", \"tool_call_id\": \"7b9ffd03-579f-43d1-a21e-f46dc0145239\"}]}",
+      "tool_calls": [
+        {
+          "name": "get_service_status",
+          "args": {
+            "service": "api"
+          },
+          "id": "7b9ffd03-579f-43d1-a21e-f46dc0145239"
+        }
+      ],
+      "timestamp": "2026-11-22T16:57:19.347672+00:00",
+      "duration_ms": 16.0,
+      "elapsed_ms": 3297.0
+    },
+    {
+      "step_number": 3,
+      "node_name": "agent",
+      "input": "{\"step_count\": 1, \"messages_count\": 3, \"last_message\": {\"type\": \"tool\", \"content\": \"{\\\"service\\\": \\\"api\\\", \\\"status\\\": \\\"healthy\\\", \\\"latency_ms\\\": 120}\", \"name\": \"get_service_status\", \"status\": \"success\", \"tool_call_id\": \"7b9ffd03-579f-43d1-a21e-f46dc0145239\"}, \"safety_stop\": null}",
+      "output": "{\"messages\": [{\"type\": \"ai\", \"content\": \"Сервіс api відображає статус healthy і задіяною затримкою є 120 мілісекунд. Тепер я зможу перевірити результати тестування цього сервісу.\", \"tool_calls\": []}], \"step_count\": 2}",
+      "tool_calls": [],
+      "timestamp": "2026-11-22T16:57:20.413548+00:00",
+      "duration_ms": 1063.0,
+      "elapsed_ms": 4360.0
+    },
+    {
+      "step_number": 4,
+      "node_name": "formatter",
+      "input": "{\"step_count\": 2, \"messages_count\": 4, \"last_message\": {\"type\": \"ai\", \"content\": \"Сервіс api відображає статус healthy і задіяною затримкою є 120 мілісекунд. Тепер я зможу перевірити результати тестування цього сервісу.\", \"tool_calls\": []}, \"safety_stop\": null}",
+      "output": "{\"final_answer\": {\"answer\": \"Сервіс api відображає статус healthy і задіяною затримкою є 120 мілісекунд.\", \"confidence\": 1.0, \"sources\": [\"get_service_status\"]}, \"step_count\": 3}",
+      "tool_calls": [],
+      "timestamp": "2026-11-22T16:57:21.988328+00:00",
+      "duration_ms": 1578.0,
+      "elapsed_ms": 5938.0
+    }
+  ]
+}
